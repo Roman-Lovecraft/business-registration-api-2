@@ -27,20 +27,13 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Установка Chrome 133.0.6943.53
-RUN wget -q "https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.53/linux64/chrome-linux64.zip" && \
-    unzip chrome-linux64.zip && \
-    mv chromedriver /usr/bin/chromedriver && \
-    chmod +x /usr/bin/chromedriver && \
-    rm chrome-linux64.zip
-
-# Установка ChromeDriver 133.0.6943.53
-RUN wget -q "	https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.53/linux64/chromedriver-linux64.zip" && \
-    unzip chromedriver-linux64.zip && \
-    mv chromedriver /usr/bin/chromedriver && \
-    chmod +x /usr/bin/chromedriver && \
+# Скачиваем и распаковываем Chrome и ChromeDriver
+RUN wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.53/linux64/chrome-linux64.zip && \
+    unzip chrome-linux64.zip -d /opt/ && \
+    rm chrome-linux64.zip && \
+    wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.53/linux64/chromedriver-linux64.zip && \
+    unzip chromedriver-linux64.zip -d /opt/ && \
     rm chromedriver-linux64.zip
-
 
 # Устанавливаем рабочую директорию
 WORKDIR /app

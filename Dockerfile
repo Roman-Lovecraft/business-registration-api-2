@@ -1,28 +1,38 @@
-# Используем официальный базовый образ Python
-FROM python:3.9-slim
-
-# Установка зависимостей для Chrome и chromedriver
-RUN apt-get update && apt-get install -y wget unzip \
+# Установка зависимостей
+RUN apt-get update && apt-get install -y \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    libglib2.0-0 \
+    libnss3 \
+    libnspr4 \
+    fonts-liberation \
+    libappindicator3-1 \
+    xdg-utils \
     wget \
     unzip \
-    libnss3 \
-    libgconf-2-4 \
-    gnupg \
-    curl \
-    libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Установка Chrome
 RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && dpkg -i google-chrome-stable_current_amd64.deb || apt-get -fy install
 
-# Установка ChromeDriver (версию нужно проверить перед установкой)
+# Установка ChromeDriver
 RUN CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
     wget -q "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver
-
 
 
 

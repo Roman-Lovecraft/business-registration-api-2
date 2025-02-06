@@ -1,8 +1,11 @@
-# Используем официальный базовый образ Python
+# Используем базовый образ Python
 FROM python:3.9-slim
 
 # Установка зависимостей
 RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    unzip \
     libasound2 \
     libatk-bridge2.0-0 \
     libatk1.0-0 \
@@ -22,22 +25,19 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation \
     libappindicator3-1 \
     xdg-utils \
-    wget \
-    unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Установка Chrome
+# Установка Google Chrome
 RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && dpkg -i google-chrome-stable_current_amd64.deb || apt-get -fy install
 
 # Установка ChromeDriver
-RUN CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
+RUN CHROMEDRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
     wget -q "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
-    chmod +x /usr/bin/chromedriver
-
-
+    chmod +x /usr/bin/chromedriver && \
+    rm chromedriver_linux64.zip
 
 
 # Устанавливаем рабочую директорию

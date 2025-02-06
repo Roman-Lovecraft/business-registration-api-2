@@ -4,10 +4,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from app.models import FormData
+from selenium.webdriver.chrome.options import Options
 
 def fill_form(data: FormData):
-    driver = webdriver.Chrome()
+    options = Options()
+    options.add_argument("--user-data-dir=/tmp/user_data")  # Уникальная директория для данных
+
+    driver = webdriver.Chrome(options=options)
     wait = WebDriverWait(driver, 10)
+
 
     try:
         driver.get("https://sos.oregon.gov/")

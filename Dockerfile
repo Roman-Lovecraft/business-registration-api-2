@@ -1,46 +1,28 @@
-# Используем официальный базовый образ Python
-FROM python:3.9-slim
+# Используем официальный Python-образ
+FROM python:3.10-slim
 
-# Устанавливаем зависимости для работы Chrome
-RUN apt-get update && apt-get install -y \
-    wget \
-    unzip \
-    libnss3 \
-    libgconf-2-4 \
-    gnupg \
-    curl \
-    libfontconfig1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Установка Google Chrome
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable
-
-# Удаляем старую версию ChromeDriver, если она существует
-RUN rm -f /usr/local/bin/chromedriver
-
-# Установка ChromeDriver
-RUN wget -q -O /tmp/chromedriver.zip https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.53/linux64/chrome-linux64.zip && \
-unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
-rm /tmp/chromedriver.zip
-
-
-
-
-
-# Устанавливаем рабочую директорию
+# Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
 
 # Копируем файлы проекта
-COPY . /app
+COPY . .
 
-# Устанавливаем зависимости Python
+# Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Открываем порт для uvicorn
+# Устанавливаем Chrome и ChromeDriver для Selenium
+RUN apt-get update && apt-get install -y wget unzip \
+    && wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt install -y ./google-chrome-stable_current_amd64.deb \
+    && CHROMEDRIVER_VERSION=$(wget -qO- https://chromedriver.storage.googleapis.com/LATEST_RELEASE) \
+    && wget -q https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip \
+    && unzip chromedriver_linux64.zip -d /usr/local/bin/ \
+    && chmod +x /usr/local/bin/chromedriver \
+    && rm chromedriver_linux64.zip google-chrome-stable_current_amd64.deb \
+    && apt-get clean
+
+# Открываем порт для FastAPI
 EXPOSE 8000
 
-# Команда для запуска API
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Запускаем FastAPI-приложение
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

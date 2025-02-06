@@ -28,10 +28,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Скачиваем и распаковываем Chrome и ChromeDriver
-RUN wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.53/linux64/chrome-linux64.zip && \
+RUN wget https://storage.googleapis.com/chrome-for-testing-public/134.0.6998.3/linux64/chrome-linux64.zip && \
     unzip chrome-linux64.zip -d /opt/ && \
     rm chrome-linux64.zip && \
-    wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.53/linux64/chromedriver-linux64.zip && \
+    wget https://storage.googleapis.com/chrome-for-testing-public/134.0.6998.3/linux64/chromedriver-linux64.zip && \
     unzip chromedriver-linux64.zip -d /opt/ && \
     rm chromedriver-linux64.zip
 

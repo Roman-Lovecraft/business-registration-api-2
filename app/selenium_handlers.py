@@ -7,12 +7,8 @@ from app.models import FormData
 from selenium.webdriver.chrome.options import Options
 
 def fill_form(data: FormData):
-    options = Options()
-    options.add_argument("--user-data-dir=/tmp/user_data")  # Уникальная директория для данных
-
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome()
     wait = WebDriverWait(driver, 10)
-
 
     try:
         driver.get("https://sos.oregon.gov/")

@@ -13,7 +13,7 @@ def fill_form_oregon(credentials, data) -> str:
     """
     # Инициализация драйвера Chrome (без headless для отладки, можно включить headless в продакшене)
     chrome_options = Options()
-    chrome_options.add_argument("--user-data-dir=C:\business-registration-api-2")  # Укажите уникальный путь
+    driver = webdriver.Chrome(options=chrome_options)
 
     driver = webdriver.Chrome(options=chrome_options)
     wait = WebDriverWait(driver, 10)

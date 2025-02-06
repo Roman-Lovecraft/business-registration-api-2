@@ -1,3 +1,6 @@
+# Используем официальный базовый образ Python
+FROM python:3.9-slim
+
 # Установка зависимостей
 RUN apt-get update && apt-get install -y \
     libasound2 \
@@ -33,6 +36,7 @@ RUN CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_R
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver
+
 
 
 

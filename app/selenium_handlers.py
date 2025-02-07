@@ -18,7 +18,7 @@ def fill_form_oregon(credentials, data) -> str:
     options = Options()
     # Создаем уникальный временный каталог для каждого запуска
     temp_dir = tempfile.mkdtemp()
-    options.add_argument(r"--user-data-dir=C:\business-registration-api-2")
+
 
     driver = webdriver.Chrome(options=options)
     wait = WebDriverWait(driver, 10)

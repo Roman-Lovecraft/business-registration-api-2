@@ -11,9 +11,10 @@ def fill_form_oregon(credentials, data) -> str:
     Заполняет форму регистрации на сайте sos.oregon.gov с использованием Selenium.
     Возвращает response, полученный после успешной отправки формы.
     """
-    # Инициализация драйвера Chrome (без headless для отладки, можно включить headless в продакшене)
-    chrome_options = Options()
-    driver = webdriver.Chrome(options=chrome_options)
+    
+
+    options = Options()
+    options.add_argument("--user-data-dir=C:\business-registration-api-2")  # Укажите другую папку
 
     driver = webdriver.Chrome(options=chrome_options)
     wait = WebDriverWait(driver, 10)

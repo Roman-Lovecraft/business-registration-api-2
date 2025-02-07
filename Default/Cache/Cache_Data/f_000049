@@ -1,0 +1,522 @@
+var presidentOptionalBeenWarned = false;
+var secretaryOptionalBeenWarned = false;
+
+function CbrPage() {}
+
+CbrPage.prototype = {
+	debug: false,								// toggle for whether or not to display alerts for testing
+	showAddressPicList: false,					// toggle to show the "Select From List" link for address
+	showAddressOROnlyPicList: false,			// toggle to show the "Select From List" link for Oregon only addresses
+	addressArray: new Array(),					// container for all the address pick lists on the page
+	addressOROnlyArray: new Array(),			// container for all the Oregon only address pick lists on the page
+	showIndividualPicList: false,				// toggle to show the "Select From List" link for Individual names
+	individualArray: new Array(),				// container for all the individual pick lists on the page
+	showPhoneArrayPicList: false,				// toggle to show the "Select From List" link for phone
+	phoneArray: new Array(),					// container for all the phone pick lists on the page
+	showEmailPicList: false,					// toggle to show the "Select From List" link for email
+	emailArray: new Array(),					// container for all the email address pick lists on the page
+	businessNameDisplayId: 'titleBarValue',		// this is the id for the element containing the business name displayed in the title bar
+	businessNameFieldId: '',					// the id of the business name field
+	businessEmailDisplayId: '???????????',		// this is the id for the element containing the business email displayed in the notification section
+	businessEmailFieldId: '',					// the id of the business email field
+	sectionArray: new Array(),					// as each CbrSection is initialized it should be added to this list.  the CBR custom tag accordionSection.tag does this for us.
+	currentSection: '', 						// the current section in use (when using the continue button)
+	currentPopupId: '', 						// the current popup id in use (when using the "Select" links)
+	editSection: '', 							// if this is set, it means we're coming from the review page and should open the section with this id
+	editSectionMultipleObjectIndex: '', 		// if this is set, it means we're coming from the review page and we're after a specific object from the multiple section.  e.g. ABN Registrant
+	entityType: '',								// The type of entity this filing is.  e.g. ABN, DBC, DLLC, etc...
+	reviewPageAction: '',						// The name of the action to execute to move to the review page
+	activityType: '',                           // To identify if it is a new registration, renewal, oic etc. Introduced this mainly to identify new registrations, so that for multiobject sections I do not set the dirty bit during the pageSectionProcessing method call when the multiObject list length is 0
+	forcePreValidationOfSection: false,			// this is used to indicate that the review page validation failed and validation should be ran for all sections in order to show the errors to the user
+	allowDatabaseUpdate: false,					// this is passed into the ajax update for the section.  it is a boolean to control whether or not to perform the update or just the validation.  Initial use is for the validation when the page loads.  This is set to true once the page is initialized.
+	pageLevelAjaxInProgress: false,				// used to indicate that the this page object has initialized ajax calls and only this page object should unblock the UI once those calls are done
+	hideOtherSectionsOnSectionChange: true,		// used to determine if other sections should be closed when a new one is opened (registrations have this feature, only one section open at a time, renewals do not) 
+	firstTimeProcessing: true,                  // Hide Validation Note on first time processed
+	firstTimeLoadingNewOicPageIndicator: false,
+	currentMultiObjAddEditPopupSaveButtonID: '', //When we click the "Save" button on the multiObj Add/Edit popup (like for IDK, memberMgr etc), if there are errors, then a second popup appears with the errors and the saveButton is disabled. Now when we close the error popup, we need to re-enable the saveButton. This will provide the id to use for that.
+	currentMultiObjAddEditPopupCancelButtonID: '', //When we click the "Save" button on the multiObj Add/Edit popup (like for IDK, memberMgr etc), if there are errors, then a second popup appears with the errors and the cancelButton is disabled. Now when we close the error popup, we need to re-enable the cancelButton. This will provide the id to use for that.
+	bindBusinessNameChange: function() {
+		if(this.businessNameFieldId == undefined || this.businessNameFieldId == '') {
+			if(this.debug){alert('The businessNameFieldId has not been set.\nUsually this needs done in the businessOverview.jspf');}
+			return;
+		}
+		var myObj = this;
+		$('#' + this.businessNameFieldId).bind("change",myObj,function() {
+			$('#' + myObj.businessNameDisplayId).text(this.value);
+		});
+	},
+	bindBusinessEmailChange: function() {
+		if(this.businessEmailFieldId == undefined || this.businessEmailFieldId == '') {
+			if(this.debug){alert('The businessEmailFieldId has not been set.\nUsually this needs done in the businessOverview.jspf');}
+			return;
+		}
+		var myObj = this;
+		$('#' + this.businessEmailFieldId).bind("change",myObj,function() {
+			$('#' + myObj.businessEmailFieldId).text(this.value);
+		});
+	},
+	/**
+	 * add an address to the list of available addresses
+	 * Checks for uniqueness before adding
+	 */ 
+	addAddress: function(addressObj) {
+		if(!isPresentInArray(this.addressArray,addressObj)) {
+			// add the addressObj to the array
+			this.addressArray.push(addressObj);
+			this.addressArray.sort(sortDisplayObject);
+
+			// if this is the first time (the toggle is false), then show the link to select previously entered values
+			if(!this.showAddressPicList) {
+				this.showAddressPicList = true;
+				this.showPicListSelectHref('address');
+			}
+		}
+		
+		// if this is an OR address, add it to the OR only address array
+		if(addressObj.state == 'OR') {
+			if(!isPresentInArray(this.addressOROnlyArray,addressObj)) {
+				// add the addressObj to the array
+				this.addressOROnlyArray.push(addressObj);
+				this.addressOROnlyArray.sort(sortDisplayObject);
+
+				// if this is the first time (the toggle is false), then show the link to select previously entered values
+				if(!this.showAddressOROnlyPicList) {
+					this.showAddressOROnlyPicList = true;
+					this.showPicListSelectHref('addressOROnly');
+				}
+			}
+		}
+	},
+	/**
+	 * add an individual object to the list of available names
+	 * Checks for uniqueness before adding
+	 */ 
+	addIndividual: function(individualObj) {
+		if(!isPresentInArray(this.individualArray,individualObj)) {
+			// add the individualObj to the array
+			this.individualArray.push(individualObj);
+			this.individualArray.sort(sortDisplayObject);
+
+			// if this is the first time (the toggle is false), then show the link to select previously entered values
+			if(!this.showIndividualPicList) {
+				this.showIndividualPicList = true;
+				this.showPicListSelectHref('individual');
+			}
+		}
+	},
+	/**
+	 * add an phone object to the list of available phone numbers
+	 * Checks for uniqueness before adding
+	 */ 
+	addPhone: function(phoneObj) {
+		if(!isPresentInArray(this.phoneArray,phoneObj)) {
+			// add the phoneObj to the array
+			this.phoneArray.push(phoneObj);
+			this.phoneArray.sort(sortDisplayObject);
+
+			// if this is the first time (the toggle is false), then show the link to select previously entered values
+			if(!this.showPhoneArrayPicList) {
+				this.showPhoneArrayPicList = true;
+				this.showPicListSelectHref('phone');
+			}
+		}
+	},
+	/**
+	 * add an email object to the list of available email addresses
+	 * Checks for uniqueness before adding
+	 */ 
+	addEmailAddress: function(emailObj) {
+		if(!isPresentInArray(this.emailArray,emailObj)) {
+			// add the emailObj to the array
+			this.emailArray.push(emailObj);
+			this.emailArray.sort(sortDisplayObject);
+
+			// if this is the first time (the toggle is false), then show the link to select previously entered values
+			if(!this.showEmailPicList) {
+				this.showEmailPicList = true;
+				this.showPicListSelectHref('email');
+			}
+		}
+	},
+	/**
+	 * Find the elements with the selected class name (e.g. emailPicList)
+	 * and remove the class that is hiding them
+	 */
+	showPicListSelectHref: function(listType) {
+		$('.' + listType + 'PicList').each(function(){
+			$(this).removeClass('displayNone');
+		});
+	},
+	/**
+	 * Add the supplied javascript CbrSection object to the sectionArray
+	 * This is called from the accordionSectionTag where we create the
+	 * CbrSection object.
+	 */
+	addCbrSection: function(cbrSection){
+		this.sectionArray.push(cbrSection);	
+	},
+	/**
+	 * The continue button calls this function
+	 * Closes all sections then finds the current section 
+	 * and opens the next one in the array
+	 */
+	nextSectionMethod: function(event) {
+		this.pageSectionProcessing(event, 'nextSectionMethod', previousSection);
+	},
+	/**
+	 * The save button calls this function
+	 * Gets the current section and cals the ajax update method
+	 */
+	saveSectionMethod: function(event) {
+		this.pageSectionProcessing(event, 'saveSectionMethod');
+	},
+	pageSectionProcessing: function(event, callingMethodName, previousSection) {
+		// prevents page from scrolling to top
+		event.preventDefault();
+		var firstIncompleteSection = undefined;
+		try {
+			blockUI();
+			this.pageLevelAjaxInProgress = true;
+			
+			// test each section from the start of the array
+			for(var i=0; i < this.sectionArray.length; i++) {
+				var sectionObj = this.sectionArray[i];
+								
+				if(previousSection == 'president' && sectionObj.uniqueSectionId == 'president'){
+					sectionObj.dirty = true;
+				}
+				
+				if(previousSection == 'secretary' && sectionObj.uniqueSectionId == 'secretary'){
+					sectionObj.dirty = true;
+				}
+				
+				
+				if((sectionObj.multiObjectAddId != '') && (this.activityType !== 'registration')){
+					
+					if((callingMethodName != undefined) && ((callingMethodName === 'nextSectionMethod') || (callingMethodName === 'saveSectionMethod'))) {
+					
+						if(sectionObj.multipleObjectsArray.length === 0) {
+							sectionObj.dirty = true;
+						}
+					
+					}
+					
+				}
+				
+				// if hideOtherSectionsOnSectionChange is true 
+				// the current section is set
+				// and the current section isn't the current section being processed
+				// and the sectionChangeMethod from CbrSection is the initiating method
+				// and the current section is NOT hidden
+				// then hide it
+				if(this.hideOtherSectionsOnSectionChange 
+					&& this.currentSection != '' 
+					&& this.currentSection != sectionObj.uniqueSectionId
+					&& callingMethodName == 'sectionChangeMethod'
+					&& !sectionObj.sectionDiv.is(":hidden")){
+					sectionObj.visible = false;
+					sectionObj.setSectionCssClass();
+					sectionObj.sectionDiv.hide();
+					if ($("#errorPop").hasClass('ui-dialog-content')) {
+						$( "#errorPop" ).dialog( "close" );
+					}
+					
+				}
+				if(this.firstTimeProcessing === false && typeof sectionObj.sectionError === 'object' &&	!sectionObj.valid) {
+				sectionObj.sectionError.getErrorDiv().show();			
+									 
+				}
+				
+				// if the section is NOT dirty and it IS valid, move to the next section
+				if(!sectionObj.dirty && sectionObj.valid) {
+					continue;
+				}
+				
+				// if the section has been altered and has the minimum data required for an update, then call the update method
+				// decision at 04/23/2014 SCRUM was to ignore required field and just check dirty bit
+//				if(sectionObj.dirty && sectionObj.getRequiredFieldValue() != '') {
+				if(sectionObj.dirty) {
+					
+					if((sectionObj.uniqueSectionId === 'president') && presidentOptionalBeenWarned && (null != $('#presidentErrorDiv') )) {
+						$('#presidentErrorDiv').remove();
+					}
+					
+					if((sectionObj.uniqueSectionId === 'secretary') && secretaryOptionalBeenWarned && (null != $('#secretaryErrorDiv') )){
+						$('#secretaryErrorDiv').remove(); 	
+					}
+					
+					sectionObj.update();
+				}		
+				if(!sectionObj.valid) {
+					// check to see if the invalid section is required
+					// currently (04/14/2014) the only section that is required is the business overview section for registration filings.  This section is required because we can't create the entity record without a valid business name
+					if(sectionObj.requiredSection) {
+						// nothing else can happen until this required section is completed
+						// check that the current section section isn't already set as the currentSection in the CbrPageObject
+						if(this.currentSection != '' && this.currentSection != sectionObj.uniqueSectionId) {
+							// stop any other click events from firing (i.e. stop the current section from opening) 
+							event.stopImmediatePropagation();
+							
+							// if the requiredSection isn't already visible, then open it
+							if(!sectionObj.visible) {
+								sectionObj.sectionHeader.click();
+							}
+							
+							// exit the method and either nothing will happen or the required section will open
+							return false;
+						}						
+					}				
+					// if the section is NOT valid and it is the first invalid section encountered, save a reference to it and continue validating the other sections
+					if(firstIncompleteSection == undefined) {
+						firstIncompleteSection = sectionObj;
+					}
+				}
+				if(this.firstTimeProcessing && typeof sectionObj.sectionError === 'object') {
+//					sectionObj.sectionError.getErrorDiv().hide('slow');
+					if ($("#errorPop").hasClass('ui-dialog-content')) {
+						$( "#errorPop" ).dialog( "close" );
+					}
+										
+//					this.firstTimeProcessing = false;
+				}
+			}
+			
+			
+			var showPop = false;
+			var errorChildarr = $('#pageErrorDiv').children("div");
+			$.each(errorChildarr, function (index) {
+				if($(this).css('display') !== 'none'){
+					showPop = true;
+			}
+			});	
+			
+			
+//			if ($('#pageErrorDiv').html().trim()) {
+				
+			if ($("#pageErrorDiv").children().length != 0 ) {
+				
+				if (showPop ) {
+					
+					 $("#errorPop").dialog({					 
+					 
+						  buttons :  { 
+						     "Close" : {
+						         text: "Close",
+						         id: "errorPopClose",
+						         click: function(){
+						        	 $( "#errorPop" ).dialog( "close" );
+						         }   
+						      } 
+						   }				 
+						});				 
+				}
+				
+			} else {
+				if ($("#errorPop").hasClass('ui-dialog-content')) {
+					 $( "#errorPop" ).dialog( "close" );
+				}				
+			}
+			
+			if ($("#presidentErrorDiv ul").find(".warningStyle").length > 0){				
+				presidentOptionalBeenWarned = true;
+			} else {
+				presidentOptionalBeenWarned = false;
+			}
+
+			if ($("#secretaryErrorDiv ul").find(".warningStyle").length > 0){				
+				secretaryOptionalBeenWarned = true;
+			} else {
+				secretaryOptionalBeenWarned = false;
+			}
+			
+		
+			
+//			if(this.firstTimeProcessing && typeof sectionObj.sectionError === 'object') {
+//				sectionObj.sectionError.getErrorDiv().hide(1000,function(){console.log("After Loop-Method: "+callingMethodName);});
+//				this.firstTimeProcessing = false;
+//			}
+			this.firstTimeProcessing = false;
+			if(callingMethodName == 'nextSectionMethod') {
+				// if an incomplete section was found, then set that section as the current one
+				if(firstIncompleteSection != undefined) {
+					// open the section if isn't already
+					if(!firstIncompleteSection.visible && this.currentSection != firstIncompleteSection.uniqueSectionId) {
+						firstIncompleteSection.sectionHeader.click();
+					}
+					return;
+				} else if((cbrPageObj.activityType === 'oic') && (presidentOptionalBeenWarned ||  secretaryOptionalBeenWarned)) {
+												
+					    $( "#errorPop" ).dialog( "close" );
+							
+						if (showPop ) {
+							
+							$('#pageButton3, #pageButton2, #pageExitButton').prop("disabled", true);
+							$('#pageButton3, #pageButton2, #pageExitButton').css("opacity", "0.5");
+							$('#pageButton3, #pageButton2, #pageExitButton').css("cursor", "not-allowed");
+							
+							
+							var errorpopDiv = $("#errorPop");
+							
+							var dialogCloseFunctionOfPopUpShowingWarnings = function(){	
+								 errorpopDiv.dialog( "close" );
+								 
+								 $('#pageButton3, #pageButton2, #pageExitButton').prop("disabled", false);
+								 $('#pageButton3, #pageButton2, #pageExitButton').css("opacity", "1");
+								 $('#pageButton3, #pageButton2, #pageExitButton').css("cursor", "pointer");
+					         };
+							
+								
+							errorpopDiv.dialog({					 
+								 
+									  buttons :  { 										  
+										  "Continue" : {
+										         text: "Continue",
+										         id: "errorPopContinue",
+										         click: function(){
+										        	 errorpopDiv.dialog( "close" );
+										        	 blockUI();
+													 window.location = cbrPageObj.reviewPageAction;
+										         }   
+										      }, 
+									     "Close" : {
+									         text: "Go Back",
+									         id: "errorPopGoBack",
+									         click: dialogCloseFunctionOfPopUpShowingWarnings
+									      } 
+									   }				 
+							});		
+								 
+						         
+							errorpopDiv.bind('dialogclose', dialogCloseFunctionOfPopUpShowingWarnings);
+						         						         
+						} //end of if(showpop)
+										
+						
+						return;
+						
+						
+				} else {
+					//Interrupt if there's a preference nag pop-up
+//					if (this.preferencePopup) {
+//						this.preferencePopup = false;
+//						return false;
+//					}
+					// if no incomplete section was found then all of them must be complete and valid
+					// move to review page
+						blockUI();
+						window.location = cbrPageObj.reviewPageAction;
+						return;
+				}
+
+			}
+			
+		} catch(e) {
+			if(this.debug){alert("Error Message: " + e.message + "\nError Code: " + e.number & 0xFFFF + "\nError Name: " + e.name);}
+		} finally {
+			this.pageLevelAjaxInProgress = false;
+			unblockUI();
+			
+		}
+	},
+	/**
+	 * 
+	 */
+	toggleAllowDatabaseUpdate: function(anchorElement) {
+		this.allowDatabaseUpdate = !this.allowDatabaseUpdate;
+		this.setAllowDatabaseUpdateText(anchorElement);
+	},
+	setAllowDatabaseUpdateText: function(anchorElement) {
+		var element = $(anchorElement);
+		// if the ojbect exists then alter its properties
+		if(element.length > 0) {
+			if(this.allowDatabaseUpdate) {
+				element.find('span').text('Updates Enabled');
+				element.css({color: "red"});
+			} else {
+				element.find('span').text('Updates Disabled');
+				element.css({color: "green"});
+			}
+		}
+	},
+	/**
+	 * Iterates the section array finds any sections which are dirty
+	 * meaning changes were made and haven't been saved.
+	 */
+	isDirty: function() {
+		for(var i=0; i < this.sectionArray.length; i++) {
+			var sectionObj = this.sectionArray[i];
+			
+			if(sectionObj.dirty) {
+				return true;
+			}
+		}
+	},
+	/**
+	 * Perform initialization of the object.
+	 */
+	initialize: function() {
+		
+		// object to save the first invalid section
+		var firstInvalidSection = undefined;
+		
+		// iterate the CbrSections and call each one's initialize method
+		for(var i=0; i < this.sectionArray.length; i++) {
+			var sectionObj = this.sectionArray[i];
+			//alert('calling initialize() for section '+sectionObj.uniqueSectionId);
+			sectionObj.initialize();
+									
+			if(!sectionObj.valid && firstInvalidSection == undefined) {
+				firstInvalidSection = sectionObj;
+			}
+		}
+		
+		this.bindBusinessNameChange();
+//		this.bindBusinessEmailChange();
+		
+		// if the editSection attribute is set then we are coming from the review page and need to open the section
+		// with that uniqueId
+		if(this.editSection == '') {
+			// open the first invalid section found
+			// if an invalid section was found, open it
+			if(firstInvalidSection != undefined) {
+				firstInvalidSection.sectionHeader.click();
+				// mark it as dirty so that when the continue or save is used it will do a validation update
+				firstInvalidSection.dirty = true;
+			}
+		} else {
+			// find the section whose uniqueSectionId matches the editSection value and open it
+			for(var i=0; i < this.sectionArray.length; i++) {
+				var sectionObj = this.sectionArray[i];
+			
+				if(this.editSection == sectionObj.uniqueSectionId) {
+					// if this is a multiple object section (such as ABN registrant) then get the multipleObjectIndex and change to that object's values
+					if(this.editSectionMultipleObjectIndex != '') {
+						sectionObj.changeAssocNameValues(this.editSectionMultipleObjectIndex);
+					}
+					sectionObj.sectionHeader.click();
+					break;
+				}
+			}
+		}	
+		
+		// check each section for changes before leavings
+		window.onbeforeunload = function() {
+			if(cbrPageObj.isDirty()) {
+				// there appears to be no way to capture if the "Stay On Page" button was clicked.  If it is clicked then the user ends up on a page with the UI remaining blocked.  Only way to avoid it is to unblock the UI before returning the confirm text.
+            	unblockUI();
+				return "Unsaved changes were detected.";
+			}
+		}
+		
+		// once complete, set the allowDatabaseUpdate page value to true
+		this.allowDatabaseUpdate = true;
+		
+//		// initialize the button text
+//		this.setAllowDatabaseUpdateText($('#toggleAllowDatabaseUpdateButton'));
+		
+	}
+};
+
+function sortDisplayObject(a,b) {
+	return a.displayValue == b.displayValue ? 0 : a.displayValue < b.displayValue ? -1 : 1;
+}

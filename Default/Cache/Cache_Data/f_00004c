@@ -1,0 +1,1032 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<script type="text/javascript">
+(function(){
+try {
+function getterHook(obj, name, cb) {
+    if (document.__defineGetter__) {
+        document.__defineGetter__(name, cb);
+        return;
+    }
+    if ((obj && obj.prototype && Object) &&
+        (Object.getOwnPropertyDescriptor) &&
+        (Object.getOwnPropertyDescriptor(obj.prototype, name)) &&
+        (Object.getOwnPropertyDescriptor(obj.prototype, name).get) &&
+        (Object.getOwnPropertyDescriptor(obj.prototype, name).configurable)) {
+        Object.defineProperty(obj.prototype, name, { get : cb });
+        return;
+    }
+}
+function asmReferrerGetter() { return "https://secure.sos.state.or.us/cbrbr/signature.action"; }
+getterHook(Document, "referrer", asmReferrerGetter);
+} catch(e) {}
+})();
+
+</script>
+
+<script type="text/javascript">
+(function(){
+window["loaderConfig"] = "/TSPD/?type=21";
+})();
+
+</script>
+
+<script type="text/javascript" src="/TSPD/?type=18"></script>
+
+<APM_DO_NOT_TOUCH>
+
+<script type="text/javascript">
+(function(){
+window.PFK=!!window.PFK;try{(function(){(function(a){var d=this[l("tnemucod")],g=[];try{a={" == f":!a};var h=d.getElementsByTagName("*");for(var k in h)if(a[" == f"])try{h[k].setAttribute("data-safe","true")}catch(m){g.push(m.message)}}catch(m){g.push(m.message)}return g;function l(m){var n="";for(var r in m)n=m[r]+n;return n}})(!0);var b=30;try{var ba,ca,ka=c(43)?1:0;for(var pa=(c(74),0);pa<ca;++pa)ka+=c(249)?3:1;ba=ka;window.eb===ba&&(window.eb=++ba)}catch(a){window.eb=ba}var e=!0;
+function p(a){var d=arguments.length,g=[];for(var h=1;h<d;h++)g[h-1]=arguments[h]-a;return String.fromCharCode.apply(String,g)}function sa(a){var d=8;a&&(document[t(d,126,113,123,113,106,113,116,113,124,129,91,124,105,124,109)]&&document[t(d,126,113,123,113,106,113,116,113,124,129,91,124,105,124,109)]!==f(68616527658,d)||(e=!1));return e}function f(a,d){a+=d;return a.toString(36)}function ua(){}sa(window[ua[f(1086824,b)]]===ua);sa(typeof ie9rgb4!==f(1242178186169,b));
+sa(RegExp("\x3c")[f(1372175,b)](function(){return"\x3c"})&!RegExp(f(42859,b))[f(1372175,b)](function(){return"'x3'+'d';"}));
+var xa=window[t(b,127,146,146,127,129,134,99,148,131,140,146)]||RegExp(t(b,139,141,128,135,154,127,140,130,144,141,135,130),f(-12,b))[f(1372175,b)](window["\x6e\x61vi\x67a\x74\x6f\x72"]["\x75\x73e\x72A\x67\x65\x6et"]),ya=+new Date+(c(156)?6E5:810917),Ba,Ca,Da,Ga=window[p(b,145,131,146,114,135,139,131,141,147,146)],Ha=xa?c(654)?3E4:25950:c(625)?6E3:8841;
+document[t(b,127,130,130,99,148,131,140,146,106,135,145,146,131,140,131,144)]&&document[p(b,127,130,130,99,148,131,140,146,106,135,145,146,131,140,131,144)](t(b,148,135,145,135,128,135,138,135,146,151,129,134,127,140,133,131),function(a){var d=39;document[p(d,157,144,154,144,137,144,147,144,155,160,122,155,136,155,140)]&&(document[p(d,157,144,154,144,137,144,147,144,155,160,122,155,136,155,140)]===p(d,143,144,139,139,140,149)&&a[p(d,144,154,123,153,156,154,155,140,139)]?Da=!0:document[p(d,157,144,
+154,144,137,144,147,144,155,160,122,155,136,155,140)]===f(68616527627,d)&&(Ba=+new Date,Da=!1,A()))});function t(a){var d=arguments.length,g=[];for(var h=1;h<d;++h)g.push(arguments[h]-a);return String.fromCharCode.apply(String,g)}function A(){if(!document[p(6,119,123,107,120,127,89,107,114,107,105,122,117,120)])return!0;var a=+new Date;if(a>ya&&(c(240)?6E5:476686)>a-Ba)return sa(!1);var d=sa(Ca&&!Da&&Ba+Ha<a);Ba=a;Ca||(Ca=!0,Ga(function(){Ca=!1},c(323)?1:0));return d}A();
+var Ia=[c(343)?17795081:17366970,c(161)?27611931586:2147483647,c(718)?1558153217:1280056806];function Ja(a){var d=93;a=typeof a===f(1743045583,d)?a:a[t(d,209,204,176,209,207,198,203,196)](c(587)?36:33);var g=window[a];if(!g||!g[t(d,209,204,176,209,207,198,203,196)])return;var h=""+g;window[a]=function(k,l){Ca=!1;return g(k,l)};window[a][t(d,209,204,176,209,207,198,203,196)]=function(){return h}}for(var Ka=(c(282),0);Ka<Ia[f(1294399175,b)];++Ka)Ja(Ia[Ka]);sa(!1!==window[p(b,110,100,105)]);
+window.Ra=window.Ra||{};window.Ra.vj="082288665516e8001969dd1f1c0f4a0547ca19afde698a2ac06cde21e3d63b6e99b0ba85aec219885169610d29009190f6461647b8cd4d3fb63243a08653101d77446ad22826d72c70c5eca7632c4c4e82141f40068d5521b4aa5d6d7a162886ecce7f52fa86a4fe2a1114fb797909d46fa5daae9066fda9cfc8db9a3ea34c374afaad2cfa03b7eddee9644c7e8b5dad6ffabf5d31b439c40aefc0e92e72c5d8f9d85f9ca5bf5bea0b178726b4707c41303081838a38940b9bd3d2e25dc8184960cd051333d05453f04e1b0ace2f00478ff683d8589a6f0ad63b3e5e2f43ae860badb8fecd9ba235679baf9698adb2af";function B(a){var d=+new Date;if(!document[p(89,202,206,190,203,210,172,190,197,190,188,205,200,203,154,197,197)]||d>ya&&(c(265)?6E5:681114)>d-Ba)var g=sa(!1);else g=sa(Ca&&!Da&&Ba+Ha<d),Ba=d,Ca||(Ca=!0,Ga(function(){Ca=!1},c(834)?1:0));return!(arguments[a]^g)}function c(a){return 987>a}
+(function(){var a=/(A([0-9a-f]{1,4}:){1,6}(:[0-9a-f]{1,4}){1,1}Z)|(A(([0-9a-f]{1,4}:){1,7}|:):Z)|(A:(:[0-9a-f]{1,4}){1,7}Z)/ig,d=document.getElementsByTagName("head")[0],g=[];for(d&&(d=d.innerHTML.slice(0,1E3));d=null!==a.exec("");)g.push(d)})();})();}catch(x){}finally{ie9rgb4=void(0);};function ie9rgb4(a,b){return a>>b>>0};
+
+})();
+
+</script>
+</APM_DO_NOT_TOUCH>
+
+<script type="text/javascript" src="/TSPD/082e584a0fab20008235dc8553e11da18e329968affcd38c9b31162559c8435bf1fb4916553b34fe?type=17"></script>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Payment</title>
+
+<!-- Required Bootstrap meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta http-equiv="X-UA-Compatible" content="IE=10">
+
+
+
+
+
+
+ 
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<link href="https://secure.sos.state.or.us/cbrstatic/css/brStandardLayout.css?timestamp=0407022025" rel="stylesheet" type="text/css"/>
+<link href="https://secure.sos.state.or.us/cbrstatic/css/brStandardContent.css?timestamp=0407022025" rel="stylesheet" type="text/css"/>
+<link href="https://secure.sos.state.or.us/cbrstatic/css/brStandardComponent.css?timestamp=0407022025" rel="stylesheet" type="text/css"/>
+<link href="https://secure.sos.state.or.us/cbrstatic/css/brResponsiveCustom.css?timestamp=0407022025" rel="stylesheet" type="text/css"/>
+
+<link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+
+
+
+<link href="/cbrbr/static/css/brAddressBox.css?timestamp=0407022025" rel="stylesheet" type="text/css"/>
+
+<link href="https://secure.sos.state.or.us/cbrstatic/css/brNameEntry.css?timestamp=0407022025" rel="stylesheet" type="text/css"/>
+
+<link href="https://secure.sos.state.or.us/cbrstatic/tools/superfish/1.7.4/cbr-superfish.css" rel="stylesheet" type="text/css"/>
+
+<!-- FONTS CSS -->
+        <link href="https://fonts.googleapis.com/css?family=Orienta|Lato:400,700,400italic,700italic|Arvo:400,700" rel="stylesheet" type="text/css" />
+        <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+<!-- JGrid CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/jqgrid/4.6.0/css/ui.jqgrid.css" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+
+<!--BOOTSTRAP REQUIRED LIBRARIES -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+	crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+	integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+	integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<!-- JQUERY UI -->
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
+	integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+	
+<!-- JQUERY GRID -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqgrid/4.6.0/js/i18n/grid.locale-en.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqgrid/4.6.0/js/jquery.jqGrid.min.js"></script>
+
+<script>var sessionId='H53gRnl6QAAs5MApDA2y6fGqK0_DIeZV2bQnGPbeVy9ZqjahI6am!1083671838!1738929502586';
+</script>
+<script src="https://secure.sos.state.or.us/cbrstatic/js/jquery.mask.min.js" type="text/javascript"></script>
+<script src="https://secure.sos.state.or.us/cbrstatic/js/jquery.cookie.js?timestamp=0407022025"
+	type="text/javascript"></script>
+<script src="https://secure.sos.state.or.us/cbrstatic/js/objects/browser.js?timestamp=0407022025"
+	type="text/javascript"></script>
+<script src="https://secure.sos.state.or.us/cbrstatic/js/cbrAccordion.js?timestamp=0407022025"
+	type="text/javascript"></script>
+
+
+<script src="https://secure.sos.state.or.us/cbrstatic/js/textInput.js?timestamp=0407022025"
+	type="text/javascript"></script>
+<script src="https://secure.sos.state.or.us/cbrstatic/js/brStandardPageLoad.js?timestamp=0407022025"
+	type="text/javascript"></script>
+<script src="https://secure.sos.state.or.us/cbrstatic/js/cbrCommon.js?timestamp=0407022025"
+	type="text/javascript"></script>
+<script src="https://secure.sos.state.or.us/cbrstatic/js/cbrSessionTimeout.js?timestamp=0407022025"
+	type="text/javascript"></script>
+
+
+<script src="/cbrbr/static/js/AddressCommonScripts.js?timestamp=0407022025" type="text/javascript"></script>
+<script>
+	function populateStates() {
+		if (usStatesOptions.length == 0) {
+			
+			addUsState('AL',
+					'Alabama');
+			
+			addUsState('AK',
+					'Alaska');
+			
+			addUsState('AS',
+					'American Samoa');
+			
+			addUsState('AZ',
+					'Arizona');
+			
+			addUsState('AR',
+					'Arkansas');
+			
+			addUsState('AA',
+					'Armed Forces Americas');
+			
+			addUsState('AE',
+					'Armed Forces Europe, Middle East, &amp; Canada');
+			
+			addUsState('AP',
+					'Armed Forces Pacific');
+			
+			addUsState('CA',
+					'California');
+			
+			addUsState('CO',
+					'Colorado');
+			
+			addUsState('CT',
+					'Connecticut');
+			
+			addUsState('DE',
+					'Delaware');
+			
+			addUsState('DC',
+					'District of Columbia');
+			
+			addUsState('FM',
+					'Federated States of Micronesia');
+			
+			addUsState('FL',
+					'Florida');
+			
+			addUsState('GA',
+					'Georgia');
+			
+			addUsState('HI',
+					'Hawaii');
+			
+			addUsState('ID',
+					'Idaho');
+			
+			addUsState('IL',
+					'Illinois');
+			
+			addUsState('IN',
+					'Indiana');
+			
+			addUsState('IA',
+					'Iowa');
+			
+			addUsState('KS',
+					'Kansas');
+			
+			addUsState('KY',
+					'Kentucky');
+			
+			addUsState('LA',
+					'Louisiana');
+			
+			addUsState('ME',
+					'Maine');
+			
+			addUsState('MH',
+					'Marshall Islands');
+			
+			addUsState('MD',
+					'Maryland');
+			
+			addUsState('MA',
+					'Massachusetts');
+			
+			addUsState('MI',
+					'Michigan');
+			
+			addUsState('MN',
+					'Minnesota');
+			
+			addUsState('MS',
+					'Mississippi');
+			
+			addUsState('MO',
+					'Missouri');
+			
+			addUsState('MT',
+					'Montana');
+			
+			addUsState('NE',
+					'Nebraska');
+			
+			addUsState('NV',
+					'Nevada');
+			
+			addUsState('NH',
+					'New Hampshire');
+			
+			addUsState('NJ',
+					'New Jersey');
+			
+			addUsState('NM',
+					'New Mexico');
+			
+			addUsState('NY',
+					'New York');
+			
+			addUsState('NC',
+					'North Carolina');
+			
+			addUsState('ND',
+					'North Dakota');
+			
+			addUsState('MP',
+					'Northern Mariana Islands');
+			
+			addUsState('OH',
+					'Ohio');
+			
+			addUsState('OK',
+					'Oklahoma');
+			
+			addUsState('OR',
+					'Oregon');
+			
+			addUsState('PA',
+					'Pennsylvania');
+			
+			addUsState('PR',
+					'Puerto Rico');
+			
+			addUsState('PW',
+					'Palau');
+			
+			addUsState('RI',
+					'Rhode Island');
+			
+			addUsState('SC',
+					'South Carolina');
+			
+			addUsState('SD',
+					'South Dakota');
+			
+			addUsState('TN',
+					'Tennessee');
+			
+			addUsState('TX',
+					'Texas');
+			
+			addUsState('UT',
+					'Utah');
+			
+			addUsState('VT',
+					'Vermont');
+			
+			addUsState('VI',
+					'Virgin Islands of the U.S.');
+			
+			addUsState('VA',
+					'Virginia');
+			
+			addUsState('WA',
+					'Washington');
+			
+			addUsState('WV',
+					'West Virginia');
+			
+			addUsState('WI',
+					'Wisconsin');
+			
+			addUsState('WY',
+					'Wyoming');
+			
+		}
+		if (caProvincesOptions.length == 0) {
+			addCaProvince('blank', '');
+			
+			addCaProvince('AB',
+					'Alberta');
+			
+			addCaProvince('BC',
+					'British Columbia');
+			
+			addCaProvince('MB',
+					'Manitoba');
+			
+			addCaProvince('NB',
+					'New Brunswick');
+			
+			addCaProvince('NL',
+					'Newfoundland and Labrador');
+			
+			addCaProvince('NT',
+					'Northwest Territories');
+			
+			addCaProvince('NS',
+					'Nova Scotia');
+			
+			addCaProvince('NU',
+					'Nunavut Territory');
+			
+			addCaProvince('ON',
+					'Ontario');
+			
+			addCaProvince('PE',
+					'Prince Edward Island');
+			
+			addCaProvince('QC',
+					'Quebec');
+			
+			addCaProvince('SK',
+					'Saskatchewan');
+			
+			addCaProvince('YT',
+					'Yukon');
+			
+		}
+	}
+</script>
+<script src="https://secure.sos.state.or.us/cbrstatic/js/jquery.blockUI.js?timestamp=0407022025"
+	type="text/javascript"></script>
+
+<!-- SUPERFISH -->
+
+
+
+</head>
+
+<body>
+
+	<script type="text/javascript">
+		$(function() {
+			
+			$('#pageButton1').prop('href',
+					'/cbrbr/payment_initialize.action').find(
+					'span').text('Ok');
+
+			
+			$('#pageButton2').prop('href',
+					'/cbrbr/signature.action').find('span')
+					.text('Cancel');
+
+			// show the buttonBarDiv
+			$('#buttonBarDiv').removeClass('displayNone');
+			// move the editButtonBarDiv inside the buttonBarDiv
+			$('#editButtonBarDiv').appendTo('#buttonBarDiv');
+
+		});
+	</script>
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+<script type="text/javascript">	
+	$(function()  {
+	    var path = "https://sos.oregon.gov/admin/PublishingImages/",
+	        env = "",
+	        files = {
+	          banner:"craterLake.jpg",
+	          secImage:"secretary-header.png",
+	          stateSeal:"bwSSeal-200.png",
+	          odvaLogo:"logo-odva.png",
+	        },
+	        host = window.location.hostname;
+	        if ((host.indexOf("local") != - 1 || host.indexOf("dev") != - 1)) {
+	          env = "apps-dev/";
+	        } else if (host.indexOf("qa") != - 1){
+	          env = "apps-qa/";
+	        } else {
+	          env = "apps/";
+	        }
+	        $.each(files, function(i,v){
+	            $("#" + i).attr("src", path + env + v);
+		});
+
+	//removes label "id" attribute for all label tags on page
+	//adds "for" attribute to all labels on page using the id of the following input field
+		var $labels = $("label");				
+		$.each($labels, function(){	
+			var idTxt = $(this).attr("for", $(this).siblings("input, select").attr("id")).removeAttr("id");			
+		});	
+
+	// Google Analytics
+		(function(i, s, o, g, r, a, m) {
+			i['GoogleAnalyticsObject'] = r;
+			i[r] = i[r] || function() {
+				(i[r].q = i[r].q || []).push(arguments)
+			}, i[r].l = 1 * new Date();
+			a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+			a.async = 1;
+			a.src = g;
+			m.parentNode.insertBefore(a, m)
+		})(window, document, 'script',
+				'//www.google-analytics.com/analytics.js', 'ga');
+
+		ga('create', 'UA-25411754-10', 'auto');
+		ga('send', 'pageview');
+		
+	});
+	</script>
+
+<div id="contactDialog"></div>
+<div id="preferenceDialog"></div>
+
+<!-- VALIDATION ERROR POPUP -->
+<div id = "errorPop" title="Validation Notes">
+<div id = "pageErrorDiv"></div>
+</div>
+
+<div id="blockUIDiv" class="displayNone">
+	<h1>
+		<img src="https://secure.sos.state.or.us/cbrstatic/img/busy.gif" /> Processing, please wait...
+	</h1>
+</div>
+
+<!-- HEADER -->
+<div id="header" class="container-fluid px-0">
+
+	<!--BANNER  - see function imageUrlBuilder() for background image location. -->
+	<div id="banner" class="container-fluid pt-lg-3 pt-sm-3 pr-0 pl-0">
+
+		<div class="row">
+			<!--SECRETARY IMAGE - see function imageUrlBuilder() for image location. -->
+			<div class="col-12 col-md-4 pb-0 pl-md-3 pl-4">
+				<a href="http://sos.oregon.gov/business/Pages/default.aspx"> <img id="secImage" alt="secretary of state"
+					alt="Secretary of State Image" class="secretaryImage">
+				</a>
+			</div>
+
+			<!--APP INFO -->
+			<div class="d-none d-md-block col-md-8 pt-4 pt-md-2  px-2">
+				<!--APP NAME -->
+				<div class="row justify-content-center justify-content-md-end mr-md-5 ">
+					<div id="appName">
+						Oregon Business Registry
+					</div>
+				</div>
+
+				<!--CORPORATION SERVICE MESSAGE -->
+				<div class="row justify-content-center justify-content-md-end mr-md-5 ">
+					<div class="text-center text-md-right">
+						<a href="http://sos.oregon.gov/business/Pages/default.aspx"> <span id="banner-serviceMsg"> <span
+								id="banner-service-SoS"> Secretary of State </span> <span id="divisionName"> Corporation Division
+							</span>
+						</span>
+						</a>
+					</div>
+				</div>
+				<!--LOGIN -->
+				<div class="row justify-content-center justify-content-md-end mr-md-5">
+					<div id="banner-login" class="mt-1 mt-md-3 mb-0 smallText">
+						
+
+
+
+
+	<div class="welcomeUser" style="display: inline; margin-right: 1em;">
+		Welcome
+ 		
+ 		
+			John Doe
+ 		
+	</div>
+ 	
+ 		<a id="manageLoginLink" href="#" class="actionPromptStyle welcomeUser" onclick="window.open('https://secure.sos.state.or.us/oim/security?oimAction=profile');">
+			Manage Login
+		</a>
+		&nbsp;&nbsp;|&nbsp;&nbsp;
+		<a id="logoutLink" class="actionPromptStyle welcomeUser blockUIOnClick" href="https://secure.sos.state.or.us:443/cbrbr/changeApp.action?url=https%3A%2F%2Fsecure.sos.state.or.us%2Fcbrmanager%2Flogout.action">Log Out</a>
+	
+
+
+
+
+					</div>
+				</div>
+			</div>
+			<!--END APP INFO -->
+		</div>
+	</div>
+	<!-- END BANNER -->
+	
+	<!-- MENU -->
+	<div class="container-fluid pr-0 pl-0">
+	
+
+
+
+<div id="menu" class="container-fluid pt-0 pb-0">
+
+	<!--NAVIGATION -->
+
+	<nav class="navbar navbar-expand-lg navbar-light pr-0 pl-0 ">
+		<a class="navbar-brand d-lg-none" href="#"> Business Registry </a>
+		<button id="menuToggleButton" class="navbar-toggler custom-toggler " type="button" data-toggle="collapse"
+			data-target="#navbarSupportedContentMobile" aria-controls="navbarSupportedContentMobile" aria-expanded="false"
+			aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+
+		<div class="collapse navbar-collapse" id="navbarSupportedContentMobile">
+			<ul class="navbar-nav mr-auto pl-2 pl-md-4 pr-2">
+				
+					<!-- HOME ITEMS -->
+					
+						
+							<li class="nav-item"> <a id="homeButtonUser" class="blockUIOnClick nav-link"
+								href="https://secure.sos.state.or.us:443/cbrbr/changeApp.action?url=https%3A%2F%2Fsecure.sos.state.or.us%2Fcbrmanager%2Fwelcome.action"> Home
+							</a></li>
+						
+						
+						
+					
+					<!--END HOME ITEMS -->
+
+					
+						<!-- NEW BUSINESS -->
+						<li class="nav-item"><a id="newBusinessButton" class="blockUIOnClick nav-link  nav-link"
+							href="https://secure.sos.state.or.us:443/cbrbr/changeApp.action?url=https%3A%2F%2Fsecure.sos.state.or.us%2Fcbrmanager%2FdisplayBusinessHome.action"> New Business
+						</a></li>
+						<!-- END NEW BUSINESS -->
+
+						<!-- UPDATE BUSINESS -->
+						<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" id="updateDropDown" role="button"
+							data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Update Business
+						</a>
+							<div class="dropdown-menu" aria-labelledby="updateDropDown">
+								<a class="blockUIOnClick dropdown-item" href="https://secure.sos.state.or.us/cbrbr/changeAppRenewal.action"> Corporation Division Business Renewal
+								</a> <a class="dropdown-item" href="https://secure.sos.state.or.us:443/cbrbr/changeApp.action?url=https%3A%2F%2Fsecure.sos.state.or.us%2FABNWeb%2FprocessCBCCRequest.do"> Employer Business Contact Change
+								</a>
+							</div></li>
+						<!-- UPDATE BUSISNESS END -->
+
+						<!-- WORKLIST -->
+						<li class="nav-item"><a id="worklistMenuButton" class="blockUIOnClick nav-link"
+							href="https://secure.sos.state.or.us:443/cbrbr/changeApp.action?url=https%3A%2F%2Fsecure.sos.state.or.us%2Fcbrmanager%2FdisplayCustomerWorklist.action"> Worklist
+						</a></li>
+						<li class="nav-item"></li>
+					
+				
+
+				<!-- TOOLS -->
+				<li class="nav-item dropdown "><a class="nav-link dropdown-toggle" href="#" id="toolsDropDown" role="button"
+					data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Tools
+				</a>
+					<div class="dropdown-menu" aria-labelledby="toolsDropDown">
+						<a class="dropdown-item" href="https://www.oregon.gov/business/Pages/index.aspx" target="_blank"> Oregon Business Xpress
+						</a> <a class="dropdown-item" href="https://egov.sos.state.or.us/br/pkg_web_name_srch_inq.login" target="_blank"> Business Name Search
+						</a> <a class="dropdown-item" href="https://apps.oregon.gov/SOS/LicenseDirectory/  " target="_blank"> Licensing Directory
+						</a> <a class="dropdown-item" href="https://sos.oregon.gov/business/Pages/default.aspx" target="_blank"> Secretary of State - Corporation Division Home
+						</a> <a class="dropdown-item" href="https://sos.oregon.gov/business/Documents/business-guides/start-business-guide.pdf" target="_blank"> Starting a Business in Oregon (guide)
+						</a> <a class="dropdown-item" href="https://www.oregon.gov/DOR/Pages/index.aspx" target="_blank"> Department of Revenue
+						</a> <a class="dropdown-item" href="https://www.oregon.gov/employ/pages/index.aspx" target="_blank"> Oregon Employment Department
+						</a> <a class="dropdown-item" href="https://www.oregon.gov/DCBS/Pages/index.aspx" target="_blank"> Department of Consumer and Business Services
+						</a>
+
+					</div></li>
+				<!-- END TOOLS -->
+
+				<!-- DEVL/QA ITEMS -->
+				
+				<!-- END DEVL/QA ITEMS -->
+
+				<!-- HELP -->
+				<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" id="helpDropdown" role="button"
+					data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Help
+				</a>
+
+					<div class="dropdown-menu" id="helpDropMenu" aria-labelledby="helpDropdown">
+						
+							<a class="dropdown-item" href='http://sos.oregon.gov/business/Pages/obr-efiling-faq.aspx' id="viewHelpOpener" target="_blank">View Help</a>
+						
+						<a class="dropdown-item faqPopupOpener" href='http://sos.oregon.gov/business/Pages/obr-efiling-faq.aspx' id="faqDialogOpener" target="_blank">
+							FAQs
+						</a>
+						
+							<a class="dropdown-item menuItemShowFullScreenOnly" href="https://secure.sos.state.or.us:443/cbrbr/changeApp.action?url=https%3A%2F%2Fsecure.sos.state.or.us%2Fcbrmanager%2Flogout.action"
+								id="logoutHelpMenu"> Log Out
+							</a>
+							<a class="dropdown-item menuItemShowFullScreenOnly" href="#" id="manageUserHelpMenu"
+								onclick="window.open('https://secure.sos.state.or.us/oim/security?oimAction=profile');"> Manage Login
+							</a>
+						
+						<!-- HELP MODAL -->
+						<a href="#" data-toggle="modal" class="dropdown-item" data-target="#aboutModal"> About
+						</a>
+						<!-- USER PREFERENCES -->
+						<a id="userPreferencesMenu" class="preferenceDialogOpener dropdown-item" href="#">User Preferences</a>
+						</a>
+						<!-- CONTACT US -->
+						<a id="contactDialogMenu" class="contactDialogOpener dropdown-item" href="#">Contact Us</a>
+					</div></li>
+				<!-- END HELP -->
+				
+					<li class="d-lg-none nav-item  active mt-4 mt-md-0"><a id="logoutLinkMenu" class="nav-link blockUIOnClick"
+						href="https://secure.sos.state.or.us:443/cbrbr/changeApp.action?url=https%3A%2F%2Fsecure.sos.state.or.us%2Fcbrmanager%2Flogout.action">Log Out</a></li>
+				
+								
+				<!-- FULL SCREEN -->
+				
+					<li class="nav-item"><a class="nav-link" id="fullScreenHref" href="#"></a></li>
+				
+				<!-- END FULL SCREEN -->
+			</ul>
+		</div>
+	</nav>
+</div>
+<!--END NAVIGATION -->
+
+
+<script>
+
+//  closes the help dropdown when preferences or contact us is clicked
+	$('#userPreferencesMenu, #contactDialogMenu').click(function() {
+		$("#helpDropMenu").collapse('hide');
+	});
+
+	var menuBarIndex = 2000;
+	$('div#menu').find('a').each(function() {
+		$(this).attr('tabindex', menuBarIndex++);
+	});
+
+	
+	$(function() {
+		initializeFullScreen('fullScreenHref', 'false');
+    });
+	
+</script>
+
+	</div>
+
+	<!-- TITLE BAR -->
+	
+		<div id="titleBar">
+			<div class="container-fluid pl-3 pl-md-5 mt-4">
+
+				<div class="row">
+					<div id="titleBarValue" class="col-12 col-sm-7 largeText">
+						
+						
+							
+							OREGON TEST LLC
+						
+					</div>
+
+					
+					
+					<!-- VALIDATION NOTES OPENER -->
+				<div id="pageErrorOpenerDiv" class="displayNone col-12 col-sm-4 mt-2 mt-sm-0">
+				<button id="pageErrorOpenerButton" class="float-sm-right">Validation Notes</button>
+				</div>
+	
+				</div>
+			</div>
+		</div>
+	
+
+	<!--END TITLE BAR -->
+
+</div>
+<!-- END HEADER -->
+
+<!-- MAIN CONTENT -->
+<div id="main" class="container-fluid d-block mt-3 pt-0 pl-3 pr-3 pl-md-5 pr-md-5 pb-3">
+	
+
+		<div class="row">
+			<div class="col-12 col-md-6 mb-3">
+				<div class="requiredFieldPromptStyle">
+					<h1>Submit and Pay</h1>
+				</div>
+				<div>
+					A payment is required. You will be redirected to the state's payment processor to submit your payment. Please do not
+					click the browser back button during processing as this may cause the filing submission to fail. <br /> <br />
+					
+					Proceed to payment process?
+
+					
+						<div class="mt-3">The fee for this filing is $100.00.</div>
+					
+					
+				</div>
+			</div>
+
+			<div class="col-12 col-md-6 bg-light p-3">
+
+				
+			</div>
+		</div>
+
+		<div id="simulatePaymentDiv" class="errorStyle" style="margin-top: 1em;"></div>
+
+	
+	<div id="buttonBarDiv" class="mt-5 displayNone"></div>
+</div>
+
+<div id="footer" class="d-block footer">
+	<nav class="navbar navbar-light bg-light pb-3 pt-3">
+		<div class="d-none d-md-block col-md-3">
+			<!--  See function imageUrlBuilder() for image location.  -->
+			<img id="stateSeal" class="stateSeal img-fluid pl-lg-5 pr-lg-5 pl-md-4 pr-md-4" alt="State of Oregon Seal">
+		</div>
+		<div class="col-sm-12 col-md-3 pl-0 pr-0">
+			<h5>Contact</h5>
+			<ul id="contactList" class="footerList">
+				<li>Oregon Business Registry</li>
+				<li>A Service of the Oregon Secretary of State</li>
+				<li>Corporation Division</li>
+				<li>255 Capitol St NE, Salem, OR 97310</li>
+				<li>(503)986-2200</li>
+				<li></li>
+				<li><a id="contactLink" href="#" class="contactDialogOpener actionPromptStyle"> 
+				Contact Us
+				</a></li>
+			</ul>
+		</div>
+		<div class="col-sm-12 col-md-3 mt-2 pl-0 pr-0">
+			<h5>Policies</h5>
+			<ul id="policyList" class="footerList">
+				<li><a href="https://sos.oregon.gov/Pages/privacypolicy.aspx" target="_blank">Privacy Policy</a></li>
+				<li><a href="https://sos.oregon.gov/Pages/webaccessibilitypolicy.aspx" target="_blank">Accessibility Policy</a></li>
+				<li><a id="faqLink" href="http://sos.oregon.gov/business/Pages/obr-efiling-faq.aspx" target="_blank" class="actionPromptStyle"> FAQs
+				</a></li>
+			</ul>
+		</div>
+		<div class="col-sm-12 col-md-3 pl-0 pr-0">
+			<h5>About Oregon.gov</h5>
+			<ul id="aboutList" class="footerList">
+				<li><a href="http://www.oregon.gov/" target="_blank">Oregon.gov</a></li>
+				<li><a href="https://employeesearch.dasapp.oregon.gov" target="_blank">State Directories</a></li>
+				<li><a href="http://www.oregon.gov/ODVA/Pages/VETFORM.aspx" target="_blank"> <!--  See function imageUrlBuilder() for image location.  -->
+						<img id="odvaLogo" class="mt-3 mb-3 img-fluid" alt="Oregon Department of Veterans Affairs">
+				</a></li>
+				<li><a id="aboutLink" href="#" data-toggle="modal" data-target="#aboutModal">About Oregon Business Registry</a></li>
+				<li>&copy; 2025 Oregon Secretary of State all rights reserved</li>
+			</ul>
+		</div>
+	</nav>
+</div>
+
+<!-- ABOUT MODAL -->
+<div class="modal fade" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="aboutModalLongTitle">About Oregon Business Registry</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<div class="row pt-2 pr-2 pl-2">
+					<div class="col-12 ">
+						<ul class="footerList">
+							<li><span class="font-weight-bold">Application Version : </span>&nbsp; cbrBr 4.6.3.0</li>
+							<li><span class="font-weight-bold">User:
+							</span>&nbsp; John Doe</li>
+							<li><span class="font-weight-bold"> Environment: </span>&nbsp; prod</li>
+							<li><span class="font-weight-bold">Server: </span>&nbsp; sos-lpwlgl-02</li>
+							<li><span class="font-weight-bold">Screen Resolution:</span>&nbsp; <span id="resolutionDisplay"
+								class="sectionTextStyle"></span>
+							<li><span class="font-weight-bold"> Browser:</span>&nbsp;<span id="browserName" class="sectionTextStyle"></span></li>
+						</ul>
+					</div>
+				</div>
+				<div class="modal-footer justify-content-center flex-wrap">
+					<button type="button" style="background-color: #31526E;" class="btn btn-dark" data-dismiss="modal">Close</button>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--END ABOUT MODAL -->
+
+<!-- PREFERENCE MODAL -->
+<div class="modal fade" id="preferenceModal" tabindex="-1" role="dialog" aria-labelledby="preferenceModalTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="preferenceModalLongTitle">User Preferences</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div  class="modal-body">
+				<div class="row pt-2 pr-2 pl-2">
+					<div id="preferenceModalBody" class="col-12 ">
+						
+					</div>
+				</div>
+				<div id="preferenceModalFooter" class="modal-footer justify-content-center flex-wrap">
+					<button type="button" id="userPrefSave" style="background-color: #31526E;" class="btn btn-dark" data-dismiss="modal">Save</button>
+					<button type="button" id="userPrefCancel" style="background-color: #31526E;" class="btn btn-dark" data-dismiss="modal">Cancel</button> 
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--END PREFERENCE MODAL -->
+
+<!-- CONTACT US MODAL -->
+<div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="contactModalTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="contactModalLongTitle">Send Email</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div  class="modal-body">
+				<div class="row pt-2 pr-2 pl-2">
+					<div id="contactModalBody" class="col-12 ">				
+					</div>
+				</div>				
+			</div>
+		</div>
+	</div>
+</div>
+<!--END CONTACT US -->
+
+<div id="timeoutDialog" title="Timeout Warning" style="display: none">
+	<div id="timeoutWarning">
+		<form id="extendSessionForm">
+			<div>Your session is about to expire. Extend session?</div>
+			<div style="padding-top: 10px;">
+				<button id="extendSessionButton" type="submit">OK</button>
+			</div>
+		</form>
+	</div>
+	<div id="timeoutNotice">
+		<div>Your session has expired.</div>
+		<div style="padding-top: 10px;">
+			
+			
+				<a href="https://secure.sos.state.or.us:443/cbrmanager/index.action" class="buttonLike"> Log In
+				</a>
+			
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+
+	//adjust width of dialog based on screen width
+	var wWidth = $(window).width();
+	var responseWidth;
+	if (wWidth > 800){
+	 	responseWidth = '30%'
+	} else {
+	 	responseWidth = '80%'
+	}
+
+	$(function(){
+		
+			initializeSessionTimeout(60,$('#timeoutDialog'),$('#timeoutWarning'),$('#timeoutNotice'),$("#extendSessionForm"));
+			$('#timeoutDialog').dialog({close: function(event, ui){
+				var title = $(this).dialog("option","title");
+				if(title=='Timeout Notice') {
+					setTimeout(function() {window.location.replace('https://secure.sos.state.or.us:443/cbrmanager/index.action');}, 500); 
+				}
+			},
+			modal: true
+			});
+			try {
+				$('#timeoutDialog').dialog("close");
+			} catch(e) {}
+				
+			
+		// loads and opens contact us modal						
+		$(".contactDialogOpener").click(function(){
+			$('#contactDialog').load('contact.action', function() {
+			    $(this).dialog({
+			        modal: true,
+			        //autoOpen: false,
+			        title: "Send Email",
+			        width: responseWidth
+			    });
+			});
+			//$('#contactDialog').dialog("open");
+			return false;
+		});
+				
+				
+		// loads and opens preferences modal						
+		$("#userPreferencesMenu").click(function(){
+			$('#preferenceDialog').load('preference.action', function() {
+			    $(this).dialog({
+			        modal: true,
+			        title: "User Preferences",
+			         width: responseWidth
+			    });
+			});
+			return false;
+		});
+			
+		//opens about modal
+		var aboutPopupDialogVar = $('#aboutPopupDiv').removeClass("displayNone").createModalOkDialog('aboutPopupDivDialog', 'About', null, 500, 420, true, false);
+		$('.aboutPopupDialogOpener').click(function() {
+			aboutPopupDialogVar.dialog('open');
+		});
+		
+		// find any anchor tags with blockUIOnClick class and add the blockUI call when clicked
+		$('a.blockUIOnClick').each(function(){
+			$(this).click(function(){
+				blockUI(); 
+			});
+		});
+		var headerActionIndex = 3000;
+		$('#banner-login').find('a').each(function(){
+			$(this).attr('tabindex',headerActionIndex++);
+		});
+		var footerActionIndex = 4000;
+		$('#footer').find('a').each(function(){
+			$(this).attr('tabindex',footerActionIndex++);
+		});
+
+		
+	});
+	
+		var href = window.location.href;
+		if(href.indexOf('?') == -1) {
+			href = href + '?print=print';
+		} else {
+			href = href + '&print=print';
+		}
+		$('#printAnchor').attr('href',href);
+	
+		
+// 		 Open the validation error popup when button clicked
+	$("#pageErrorOpenerButton").click( function(){
+		$("#errorPop").dialog({
+				buttons : { "Close" : { text: "Close",
+						         		  id: "errorPopClose",
+						               click: function(){
+						        	           $( "#errorPop" ).dialog( "close" );
+											}   
+				      				} 
+						  }
+				});
+				$("#pageErrorDiv").show();
+	           }
+     );
+	</script>
+
+	<div id="editButtonBarDiv">
+		<a id="pageButton1" href="#" class="buttonLike blockUIOnClick"></a> &nbsp;&nbsp; <a id="pageButton2" href="#"
+			class="buttonLike blockUIOnClick"></a>
+	</div>
+
+</body>
+</html>
+
+
+
+<link href="https://secure.sos.state.or.us/cbrstatic/css/jQueryCbrOverride.css?timestamp=0407022025" rel="stylesheet" type="text/css"/>

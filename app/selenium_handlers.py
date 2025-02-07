@@ -4,6 +4,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
+import os
+import tempfile
+
+
 
 
 def fill_form_oregon(credentials, data) -> str:
@@ -11,11 +15,10 @@ def fill_form_oregon(credentials, data) -> str:
     Заполняет форму регистрации на сайте sos.oregon.gov с использованием Selenium.
     Возвращает response, полученный после успешной отправки формы.
     """
-    
-
     options = Options()
+    # Создаем уникальный временный каталог для каждого запуска
+    temp_dir = tempfile.mkdtemp()
     options.add_argument(r"--user-data-dir=C:\business-registration-api-2")
-
 
     driver = webdriver.Chrome(options=options)
     wait = WebDriverWait(driver, 10)

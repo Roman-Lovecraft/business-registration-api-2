@@ -1,0 +1,1100 @@
+var previousSection;
+
+function CbrSection(uniqueSectionId,updateUrl,deleteUrl,tabIndexStart) {
+	this.uniqueSectionId 		= uniqueSectionId;
+	this.sectionHeader 			= $('#' + this.uniqueSectionId + 'SectionHeader');
+	this.sectionDiv 			= $('#' + this.uniqueSectionId + 'SectionBody');
+	this.replacementArray 		= new Array();	// used for renaming parts of the element id
+	this.ignoreFieldsArray 		= new Array();	// these fields will not be included in the ajax update, these should be the actual value
+	this.updateUrl 				= updateUrl;
+	this.deleteUrl 				= deleteUrl;
+	this.tabIndexStart 			= tabIndexStart; //the starting tabIndex for this section
+	// NOTE: Arrays have to be declared here and not down below so that they are initialized for each instance.  Otherwise multiple instances of the CbrSection object will be pointing to the same array instance and will cause problems.
+	this.multipleObjectsArray	= new Array();	// use this to store multiple objects such as ABN Registrants
+	this.multiObjectPopupDiv 	= null;
+	this.wasMultiObjUpdateDueToSaveButton = false; //the update for a multi obj can be called due to either 1. page validation or 2. savebutton click in multiobject Add/Edit popup 
+	this.memMgrSectionHasZeroEntriesAfterDelete = false; //this is set to 'true' for the duration of time from the delete(which results in 0 entries) to when the warning msg gets shown on the screen, that banks might require at least one mem/mgr listed. After the warning msg is shown, this is reset back to 'false'
+	this.sectionHeader.bind("click",this.sectionChangeMethod.bind(this));
+	
+	// doesn't work, because we're using CSS to hide it there is no event thrown
+	//	$('#' + this.uniqueSectionId + 'SectionBody').hide(0,onHideAction);
+}
+
+CbrSection.prototype = {
+	visible: false,							// we're expecting the accordion section body to be hidden once the page loads
+	dirty: false,							// toggle to indicate if any data has been changed
+	debug: false,							// if true will show alerts
+	errorCssClass: 'entryErrorStyle',		// errorCssClass
+	noErrorCssClass: 'standardEntryStyle', 	// noErrorCssClass
+	sectionError: '',						// the sectionError javascript object. initialized below in the createPageErrorSection function 
+	multipleObjectsSelectId: '',			// TODO: delete this and remove references.  stores the id of the select element
+	multiObjectAddId: '',					// the id of the href for Adding another object 
+	multiObjectTableId: '',					// the id of the table for displaying the multiple objects
+	defaultAssocNameType: '',				// assocName types for new entries
+	requiredSection: false,					// indicates if this section must be completed with valid data before it can close
+	onSuccessUpdateMethod: null,			// this is a custom method that will run when the section successfully updates. When it runs it has access to jsonResponseObject
+	changeAssocNameSecondaryValues: null,	// this is a custom method that will run at the end of the changeAssocNameValues method.  When it runs it is given the assocName object that was retrieved by the method  
+	onSuccessPostDeleteMethod: null,		// this is a custom method that will run at the end of the handleDeleteResponse method when there was a successful delete.  
+	valid: false,							// is the data valid, used to assign the correct css value
+	requiredFieldId: '',					// the id of the html element that must have a value in order for validation for this section to run when the page loads
+	sectionOnOpenMethod: null,				// the function to run to gather any data that is external to this section that is needed for processing.  Runs when the section opens.  Defined in the page that creates the accordionSection.
+	initialized: false,						// this gets set to true at the end of the initialize method.  Used to control those actions you only want to occur after the page is initialized
+	editMultiObjectIndex: -1,						// used when editing a multi object, editMultiAssocNameObject method
+	editMultiObjectPreviousValidState: '',			// used when editing a multi object, editMultiAssocNameObject method
+	editMultiObjectSectionPreviousValidState: '',	// used when editing a multi object, editMultiAssocNameObject method
+	/*
+	 * Returns the CbrPage javascript object.  Allows for changing the name without changing all the references
+	 */
+	getCbrPageObject: function() {
+		return cbrPageObj;
+	},
+	/*
+	 * performs any initialization required for the accordion section.  This is called at the end of accordion section
+	 * custom tag rendering
+	 */
+	initialize: function() {
+		var myObj = this;
+		var sectionTabIndexStart = this.tabIndexStart;
+		// TODO: may need to add more input types to be attached to onchange event 
+		
+		// attach a custom function to the onchange method of all input, textarea and select elements in the target div
+		// change the dirty indicator to designate a change to the data has occurred
+		this.sectionDiv.find('input,textarea,select').change({myObj: this}, function(event) {
+			// the section object variable
+			var sectionObject = event.data.myObj;
+			sectionObject.dirty = true;
+
+			// mark the section as invalid and remove the checkmark if its not already false
+			if(sectionObject.valid) {
+				sectionObject.valid = false;
+				sectionObject.setSectionCssClass();
+			}
+			
+			// only do this if the section has already been initialized
+			if(sectionObject.initialized) {
+				// set the current section to this section in the cbrPage object
+				sectionObject.getCbrPageObject().currentSection = sectionObject.uniqueSectionId;
+			}
+			
+			var myErrorCssClass = sectionObject.errorCssClass;
+			var myNoErrorCssClass = sectionObject.noErrorCssClass;
+			// if there is an error css style applied, remove it
+			var field = $(this);
+			if(field.hasClass(myErrorCssClass)) {
+				field.removeClass(myErrorCssClass);
+				field.addClass(myNoErrorCssClass);
+			}
+
+		});
+		
+		// add removal of uniqueId with underscore.  All field id's in a accordionSection 
+		// should be prefaced with the uniqueId and an underscore
+		this.addReplacementValue(this.uniqueSectionId + '_','');
+
+		// if this is a multiple object section then perform the initialization for 
+		// those components
+		if(this.multiObjectTableId != '') {
+			// bind the add href to the method that handles it
+			$('#' + this.multiObjectAddId).bind("click", {parentObject:this}, this.addMultiObject);
+			
+			paintTableGreenBar(this.multiObjectTableId);
+		}
+		
+		// checks that the requiredFieldId has a value, if so then performs validation for this section
+		this.performInitialValidation();
+		
+		// if the section has valid data then set the checkmark
+		this.setSectionCssClass();
+		
+		// if this is a required section and the required field value is not 
+		// present then change this section's dirty indicator so that when they leave 
+		// the section it is validated
+//		if(this.requiredSection) {
+//			this.dirty = true;
+//		}
+		
+		this.initialized = true;
+	},
+	/*
+	 * replacement values are used to massage the element id's before the data is sent via ajax to the server.
+	 * The reason is that the element ids when sent to the server must match the variable names in the java object
+	 * they're going to populate by Jackson.  Also in order for JSON.stringify method to work the names have to have
+	 * proper dot notation.  By default Struts2 uses dot notation in the names but changes those dots to underscores
+	 * when creating the id.
+	 */
+	addReplacementValue: function(value,replacement) {
+		this.replacementArray.push({
+			name: value,
+			value: replacement
+		});
+	},
+	/*
+	 * Ignored fields are those that shouldn't be included in the ajax update.  An example is the radio buttons
+	 * used on the assocName pages to show individual, bofr, bnofr fields.  That radio button is used for page flow
+	 * but shouldn't be sent to the server.
+	 */
+	addIgnoredField: function(fieldId) {
+		this.ignoreFieldsArray.push(fieldId);
+	},
+	/*
+	 * This function executes when the accordion section opens or closes 
+	 */
+	sectionChangeMethod: function(event){
+		
+		var currentSection = this.uniqueSectionId;
+						
+		// set the pageObject current section as this one
+		this.getCbrPageObject().currentSection = currentSection;
+		
+//		if(('president' == previousSection) || ('secretary' == previousSection)){
+//			this.update();
+//		}
+		
+		this.getCbrPageObject().pageSectionProcessing(event, 'sectionChangeMethod', previousSection);
+
+		// if the sectionBody is visible (meaning it is being collapsed) then we may need to do AJAX update
+		// 2013.04.08 - ryoung - look into finding a better way to determine if its being open or closed
+		// perhaps look at what css classes are assigned
+		if(!this.visible) {
+			// the section is opening
+			
+			// if the sectionOnOpenMethod function is defined then run the function
+			if(this.sectionOnOpenMethod != undefined) {
+				this.sectionOnOpenMethod();
+			}
+		}
+		// toggle the visibility indicator
+		this.visible = !this.visible; 
+		previousSection = currentSection;
+	},
+	/*
+	 * Adds the myObject variable to the multipleObjectsArray if
+	 * it is not already present in the array.
+	 * 
+	 * Both the myObject variable and all items in the array must have a getDisplayName() method
+	 * 
+	 * Also adds a row to the multiObjectTable 
+	 * 
+	 */
+	addMultipleObject: function(myObject) {
+		var myMultipleObjectsArray = this.multipleObjectsArray;
+		var occurrence = myObject.assocNameOccurrence;
+		
+		// if the occurrence is the same value as the array length then 
+		// this is a new item and needs added
+		// also add a row to the multiObjectTable
+		if(occurrence >= myMultipleObjectsArray.length) {
+			// if this is the first object being added then show the table
+			if(myMultipleObjectsArray.length == 0) {
+				// show the table div.  To do this you have to remove the 'displayNone' css class from the div that the multiObjectTable resides in
+				$('#' + this.multiObjectTableId).parent().removeClass('displayNone');
+			}
+			
+			myMultipleObjectsArray.push(myObject);
+			
+			var identifier = this.uniqueSectionId + '_' + myObject.assocNameOccurrence;
+			var editHrefId = identifier + '_editHrefId';
+			var deleteHrefId = identifier + '_deleteHrefId';
+			var displayName = myObject.getDisplayName();
+			var displayAddress = myObject.getDisplayAddress();
+			var displayNameScreen = displayName;
+			var rawMemMgr = myObject.assocNameType;
+			var displayMemMgr = (rawMemMgr == "MEM")? "Member": "Manager";
+			if (this.uniqueSectionId != "memberManager") displayMemMgr = ""; //only display Member/Manager if we are in the member/manager section.
+			// handle long display names by truncating at 100 and adding ellipses
+			if(displayNameScreen.length > 100) {
+				displayNameScreen = displayNameScreen.substring(0,100) + '...';
+			}
+
+			var myObj = this;
+			
+			// create a new anchor for edit and delete
+			var editAnchor = $('<a>').attr({id:editHrefId,href:'#'}).html(displayNameScreen)
+				.click({sectionObject:myObj,displayName:displayName,displayAddress:displayAddress},myObj.editMultiAssocNameObject);
+			var deleteAnchor = $('<a>').addClass(this.uniqueSectionId + '_deleteHref').attr({id:deleteHrefId,href:'#'}).html('Delete')
+				.click({sectionObject:myObj,displayName:displayName,displayAddress:displayAddress},myObj.deleteMultiAssocNameObject);
+
+			// find the table and create the row and cell elements.  Add the href's to the cells
+			$('#' + this.multiObjectTableId).append(
+				$('<tr>')
+					.append($('<td>').append(editAnchor))
+					.append($('<td>').append(displayMemMgr).attr("data-column", identifier + "_memMgrCol"))
+					.append($('<td>').append(deleteAnchor))
+			);
+			
+			// Prevent scrolling to the top of page when link is selected.
+			$("[id$=editHrefId]").click(function(event) {
+				event.preventDefault();  
+			});
+			
+			// if the page has been initialized then we need to repaint the table since we are adding a new entry
+			if(this.initialized) {
+				paintTableGreenBar(this.multiObjectTableId);
+			}
+		} else {
+			// if this is not a new item, then we need to find the occurrence
+			// of the item and replace it.
+			// the occurrence should be the index of the value so just replace the
+			// array contents at that point
+			myMultipleObjectsArray[occurrence] = myObject;
+		}
+	},
+	/*
+	 * Gets the data from the elements and calls methods to transform it into JSON.
+	 * Currently (20130408 we're only getting elements input:[radio,checkbox,hidden,text], textarea and select 
+	 */
+	getDataAsJSON: function() {
+		var dataFields = '';
+		if(this.multiObjectAddId == '') {
+			dataFields = this.sectionDiv.find('input[type=checkbox],input[type=radio]:checked,input[type=hidden],input[type=text],textarea,select');
+		} else {
+			dataFields = $('#' + this.uniqueSectionId + '_addEditEntityDiv').find('input[type=checkbox],input[type=radio]:checked,input[type=hidden],input[type=text],textarea,select');
+		}
+		
+		var myJsonString = this.serializeMyObject(dataFields,this);
+		var data = 'jsonString=' + JSON.stringify(myJsonString);
+		return data;
+	},
+	/* Purpose: gets a array of values ready to be converted to JSON
+	*  dataFieldArray: an array of elements to be iterated
+	*  returns: an array of id's and elements ready for JSON conversion
+	*  
+	*  Details:
+	*  The id attribute is required to be unique on a page.  As such it is common to add this object's uniqueSectionId
+	*  attribute to field's id.  During method execution that portion of the id is removed.  That allows for the 
+	*  remaining portion to be matched to java objects in the Struts action during Jackson object conversion
+	*  e.g. id: businessOverviewbusinessName (uniqueSectionId=businessOverview) -> businessName
+	*  
+	*  If there are entries in the replacementArray variable then they will be checked for each id to see if there is a
+	*  match.  An example of this is the usage of custom tags such as address.  The address formId is prepended to each
+	*  element.  Using the replacementArray variable we can specify a replacement value.  Doing this allows for id's 
+	*  that are recognized as childe objects and treated as such
+	*  e.g. 
+	*  		replacementArray: first entry looks for principalAddr_ and replaces it with principalAddress.
+	*  		first element: id= principalAddr_addressLine1 -> principalAddress.addressLine1
+	*  		first element: id= principalAddr_city -> principalAddress.city
+	*  		resulting json would transform this to "principalAddress":{"addressLine1":"addressLine1Value","city":"cityValue"}
+	*  
+	*/  
+	serializeMyObject : function(dataFieldArray, cbrSectionObj) {
+		var myIgnoreFieldsArray = this.ignoreFieldsArray;
+		var arrayData = new Array();
+		$.each(dataFieldArray, function() {
+			// if this is an ignored field, don't include it
+			for(var i=0; i < myIgnoreFieldsArray.length;i++) {
+				if(this.id == myIgnoreFieldsArray[i]) {
+					return true;	// returning true to the jquery each method is the equivalent to a continue statement in a normal loop
+				}
+			}
+
+			/*
+			 * If the element is a select-multiple type, meaning it is a select dropdown
+			 * with multiple options displayed then retrieve all available options
+			 * from the select and include their values.
+			 * 
+			 * e.g. ABN Counties
+			 */
+			var myValue = encodeURIComponent(escapeSpecialChars(this.value));
+			
+			if(this.type == 'select-multiple') {
+				var options = [];
+				var index = 0;
+				$.each($(this).find('option'), function() {
+					options[index++] = encodeURIComponent(escapeSpecialChars(this.value));
+				});
+				arrayData.push({name: this.id, value: options});
+			} else if(this.type == 'radio') {
+				// for radio elements use the element name instead of the id
+				arrayData.push({name: this.name, value: myValue});
+			} else {
+				arrayData.push({name: this.id, value: myValue});
+			}
+		});
+		
+		// add the indicator for allowing the database to be updated.
+		// this is initially used to allow the same update method to be called
+		// during the page load without allowing the database to be updated
+		arrayData.push({name: 'allowDatabaseUpdate', value: cbrSectionObj.getCbrPageObject().allowDatabaseUpdate});
+		objectData = {};
+
+		var myUniqueSectionId = this.uniqueSectionId;
+		var myReplacementArray = this.replacementArray;
+
+		$.each(arrayData, function() {
+			var name = this.name;
+			
+			// replace if there is a match in the replacementArray
+			$.each(myReplacementArray, function() {
+				name = name.replace(this.name, this.value);
+			});
+
+			// replace the _ with .
+			name = name.replace(/_/g, '.');
+
+			var value;
+
+			if (this.value != null) {
+				value = this.value;
+			} else {
+				value = '';
+			}
+
+			// search for "parent.id" like attribute
+			if (name.indexOf('.') != -1) {
+				var attrs = name.split('.');
+				var tx = objectData;
+
+				for ( var i = 0; i < attrs.length - 1; i++) {
+					if (tx[attrs[i]] == undefined)
+						tx[attrs[i]] = {};
+					tx = tx[attrs[i]];
+				}
+				tx[attrs[attrs.length - 1]] = value;
+			} else {
+				if (objectData[name] != null) {
+					if (!objectData[name].push) {
+						objectData[name] = [ objectData[name] ];
+					}
+
+					objectData[name].push(value);
+				} else {
+					objectData[name] = value;
+				}
+			}
+		});
+
+		return objectData;
+	},
+	/*
+	 * Makes the ajax call to the server
+	 */
+	update: function() {
+		if(this.dirty) {
+			// reset the dirty indicator
+			this.dirty = false;
+		}
+
+		// verify that minimum requiredFields have values
+		var jsonData = this.getDataAsJSON();
+		if(this.debug){alert("jsonData: " + jsonData);}
+
+		var myCbrPageObj = this.getCbrPageObject();
+		var myObj = this;
+		$.ajax({
+		    type: 'POST',
+		    url: this.updateUrl,
+		    data: jsonData,
+			async : false,
+			beforeSend: function() {
+				// if a page level ajax call is NOT in progress then block the UI
+				if(!myObj.getCbrPageObject().pageLevelAjaxInProgress) {
+					blockUI();
+				}
+			},
+		    success: function(jsonData) {
+		    	myObj.successFunction(myObj,jsonData);
+				// if a page level ajax call is NOT in progress then unblock the UI
+				if(!myObj.getCbrPageObject().pageLevelAjaxInProgress) {
+					unblockUI();
+				}
+			}
+		});
+	},
+	/*
+	 * This method is called after getting a response from the server ajax call
+	 */
+	successFunction: function(myObj, data) {
+		if (data.errorMessage != undefined) {
+			if(myObj.debug){alert("data.errorMessage: " + data.errorMessage);}
+			myObj.valid = false;
+		} 
+		if (data.jsonResponseString != undefined){
+			if(myObj.debug){alert("data.jsonResponseString: " + data.jsonResponseString);}
+			myObj.handleResponse(myObj,data.jsonResponseString);
+		}
+	},
+	successDeleteFunction: function(myObj, data) {
+		if (data.errorMessage != undefined) {
+			if(myObj.debug){alert("data.errorMessage: " + data.errorMessage);}
+		} 
+		if (data.jsonResponseString != undefined){
+			if(myObj.debug){alert("data.jsonResponseString: " + data.jsonResponseString);}
+			myObj.handleDeleteResponse(data.jsonResponseString);
+		}
+	},
+	/*
+	 * Decipher the JSON response string from the server and handle it
+	 * Creates error section and displays errors with links to invalid fields
+	 * If no error, 
+	 * 		* removes the error section and hides the error box if there 
+	 * 			were no error sections present
+	 * 		* saves the validated objects to the lists e.g. assocName, address, name, phone
+	 */
+	handleResponse: function(myObj, jsonResponseString) {
+		var jsonObj = jQuery.parseJSON(jsonResponseString);
+		if(jsonObj != undefined) {
+			myObj.createPageErrorSection(jsonObj.sectionUniqueId, jsonObj.sectionTitle);
+			var sectionErrorDiv = '';
+			
+			/*if(myObj.multiObjectAddId == '') {
+				sectionErrorDiv = myObj.sectionError.getSectionErrorDiv();
+			} else if((myObj.multipleObjectsArray.length === 0) && (!myObj.wasMultiObjUpdateDueToSaveButton) && (!myObj.memMgrSectionHasZeroEntriesAfterDelete)) {
+				sectionErrorDiv = myObj.sectionError.getSectionErrorDiv();
+			}else {
+				sectionErrorDiv = $('<div>');
+			}*/
+			
+			if(myObj.multiObjectAddId == '') {
+				sectionErrorDiv = myObj.sectionError.getSectionErrorDiv();
+			} else if(myObj.wasMultiObjUpdateDueToSaveButton) {
+				sectionErrorDiv = $('<div>');
+			} else if((myObj.uniqueSectionId === 'memberManager') && myObj.memMgrSectionHasZeroEntriesAfterDelete) {
+				sectionErrorDiv = $('<div>');
+			} else if(myObj.multipleObjectsArray.length === 0) {
+				sectionErrorDiv = myObj.sectionError.getSectionErrorDiv();
+			} else {
+				//sectionErrorDiv = $('<div>');
+				sectionErrorDiv = myObj.sectionError.getSectionErrorDiv();
+			}
+
+			// if this isn't a multi section and the section error section does exist, remove it (and any previous errors)
+			if(myObj.multiObjectAddId == '' && sectionErrorDiv.length != 0) {
+				sectionErrorDiv.remove();
+				if ($("#errorPop").hasClass('ui-dialog-content')) {
+					$( "#errorPop" ).dialog( "close" );
+					}
+			}
+			
+			if((myObj.multiObjectAddId != '') && (sectionErrorDiv.length != 0) && (myObj.multipleObjectsArray.length === 0)) {
+				if((!myObj.wasMultiObjUpdateDueToSaveButton) && (!myObj.memMgrSectionHasZeroEntriesAfterDelete)) {
+					sectionErrorDiv.remove();
+					if ($("#errorPop").hasClass('ui-dialog-content')) {
+						$( "#errorPop" ).dialog( "close" );
+					}
+				}
+			}
+			
+			if(jsonObj.hasErrors || jsonObj.hasWarnings) {
+				if(myObj.multiObjectAddId == '') {
+					myObj.sectionError.addSectionErrors(jsonObj, myObj.getCbrPageObject());
+				} else {
+					if(myObj.initialized && myObj.wasMultiObjUpdateDueToSaveButton) {
+						// if errors were found, first clear the error css class from all the fields, then it will just be set for those fields that have errors
+						$('#' + myObj.uniqueSectionId + '_addEditEntityDiv').find('input,textarea,select').each(function(){
+							$(this).removeClass(myObj.errorCssClass).addClass(myObj.noErrorCssClass);
+						});
+						myObj.sectionError.addSectionErrorsToDiv(sectionErrorDiv, jsonObj, false);
+						
+					} else if(myObj.initialized && (myObj.uniqueSectionId === 'memberManager') && myObj.memMgrSectionHasZeroEntriesAfterDelete) {
+						// if errors were found, first clear the error css class from all the fields, then it will just be set for those fields that have errors
+						$('#' + myObj.uniqueSectionId + '_addEditEntityDiv').find('input,textarea,select').each(function(){
+							$(this).removeClass(myObj.errorCssClass).addClass(myObj.noErrorCssClass);
+						});
+						myObj.sectionError.addSectionErrorsToDiv(sectionErrorDiv, jsonObj, false);
+					} else {
+						// if this is validation running when the page first loads then populate the error to the pageErrorDiv
+						myObj.sectionError.addSectionErrors(jsonObj, myObj.getCbrPageObject(), myObj.multipleObjectsArray[jsonObj.multiObjectOccurrence]);
+					}
+				}
+				
+				if (jsonObj.hasErrors) {
+					// set the invalid data indicator
+					myObj.valid = false;
+					
+					// if this is a multi object section also mark the multi object as not valid
+					// new objects that are invalid aren't in the multi object list
+					if(myObj.multiObjectAddId != '' && jsonObj.multiObjectOccurrence >= 0) {
+						// mark the new multi object as NOT valid if it was retrieved
+						if(myObj.multipleObjectsArray[jsonObj.multiObjectOccurrence] != undefined) {
+							myObj.multipleObjectsArray[jsonObj.multiObjectOccurrence].valid = false;
+						}
+					}
+				} else {
+					// means there are only warnings
+					myObj.valid = true;
+				}
+				
+				var addEditPopupSaveButtonID = myObj.getCbrPageObject().currentMultiObjAddEditPopupSaveButtonID;
+				var addEditPopupCancelButtonID = myObj.getCbrPageObject().currentMultiObjAddEditPopupCancelButtonID;
+				
+				// if this is a multi object section and this is NOT the page loading validation, then show the errors in a modal dialog box
+				if(myObj.multiObjectAddId != '' && myObj.initialized && myObj.wasMultiObjUpdateDueToSaveButton) {
+					var dialogTitle1 = 'Errors Were Detected';
+					if (jsonObj.sectionTitleOverride) {
+						dialogTitle1 = jsonObj.sectionTitle;
+					}
+					
+					$('#'+addEditPopupSaveButtonID).prop("disabled", true);
+					$('#'+addEditPopupSaveButtonID).css("opacity", "0.5");
+					$('#'+addEditPopupSaveButtonID).css("cursor", "not-allowed");
+					
+					$('#'+addEditPopupCancelButtonID).prop("disabled", true);
+					$('#'+addEditPopupCancelButtonID).css("opacity", "0.5");
+					$('#'+addEditPopupCancelButtonID).css("cursor", "not-allowed");
+					
+					var arrayOfIDsOfButtonsToEnableOnDialogClose = [];
+					arrayOfIDsOfButtonsToEnableOnDialogClose[0] = addEditPopupSaveButtonID;
+					arrayOfIDsOfButtonsToEnableOnDialogClose[1] = addEditPopupCancelButtonID;
+					sectionErrorDiv.createModalOkDialogWhichOnCloseEnablesButtonsSpecifiedInArray(myObj.uniqueSectionId, dialogTitle1, arrayOfIDsOfButtonsToEnableOnDialogClose, null, responseWidth, 'auto');
+					
+					
+				} else if(myObj.multiObjectAddId != '' && myObj.initialized && (myObj.uniqueSectionId === 'memberManager') && myObj.memMgrSectionHasZeroEntriesAfterDelete) {
+					var dialogTitle2 = 'Errors Were Detected';
+					if (jsonObj.sectionTitleOverride) {
+						dialogTitle2 = jsonObj.sectionTitle;
+					}
+					
+					$('#'+addEditPopupSaveButtonID).prop("disabled", true);
+					$('#'+addEditPopupSaveButtonID).css("opacity", "0.5");
+					$('#'+addEditPopupSaveButtonID).css("cursor", "not-allowed");
+					
+					$('#'+addEditPopupCancelButtonID).prop("disabled", true);
+					$('#'+addEditPopupCancelButtonID).css("opacity", "0.5");
+					$('#'+addEditPopupCancelButtonID).css("cursor", "not-allowed");
+					
+					var arrayOfIDsOfButtonsToEnableOnDialogClose = [];
+					arrayOfIDsOfButtonsToEnableOnDialogClose[0] = addEditPopupSaveButtonID;
+					arrayOfIDsOfButtonsToEnableOnDialogClose[1] = addEditPopupCancelButtonID;
+					sectionErrorDiv.createModalOkDialogWhichOnCloseEnablesButtonsSpecifiedInArray(myObj.uniqueSectionId, dialogTitle2, arrayOfIDsOfButtonsToEnableOnDialogClose, null, responseWidth, 'auto');
+					
+					myObj.memMgrSectionHasZeroEntriesAfterDelete = false; //reset back to false
+				}
+			} 
+			
+			if (!jsonObj.hasErrors) { // warnings are OK
+				// set the valid data indicator
+				myObj.valid = true;
+
+				if(myObj.multiObjectAddId != '' && jsonObj.multiObjectOccurrence >= 0) {
+					// only look for and remove existing multiObject errors if the page has already loaded
+					if(myObj.initialized) {
+						// find and remove error section for the multi object if it was set in the list
+						var multiObjectErrorSectionDiv = $('#' + myObj.sectionError.constructMultiObjectErrorDivId(jsonObj.multiObjectOccurrence));
+						if(multiObjectErrorSectionDiv.length > 0) {
+							multiObjectErrorSectionDiv.remove();
+							
+							// check the sectionError and if there is no other multiObject error sections, remove it
+							var sectionErrorDiv = $('#' + myObj.sectionError.uniqueSectionIdErrorDivName);
+							if(sectionErrorDiv.find('div').length == 0) {
+								// if the length is 0 then it wasn't found
+								// if the length is greater than 1 then there are errors present for other multiObjects
+								// if the length is 1 then there is just the title present and the sectionErrorDiv can be removed
+								sectionErrorDiv.remove();
+							}  
+						}
+					}
+					
+					// mark the new multi object as valid if it was retrieved
+					if(myObj.multipleObjectsArray[jsonObj.multiObjectOccurrence] != undefined) {
+						myObj.multipleObjectsArray[jsonObj.multiObjectOccurrence].valid = true;
+					}
+				}
+				
+				// test for error messages present, if none found, also hide the errorDivOpener
+//				if(myObj.sectionError.getErrorDiv().children().length == 1) {
+//					myObj.sectionError.hidePageErrorDiv();
+//					myObj.sectionError.hidePageErrorOpener();
+//				}
+
+				var validatedAssocNameView = jsonObj.validatedAssocNameView;
+				if(validatedAssocNameView != undefined) {
+					var newAssocName = AssocName.createFromView(validatedAssocNameView);
+					newAssocName.valid = true;
+					
+					// if this is a multiple object section then add the item to the list
+					if(myObj.multiObjectTableId != undefined && myObj.multiObjectTableId != '') {
+						// save the array size before the object is added
+						var beforeAddArrayLength = myObj.multipleObjectsArray.length;
+						
+						// save the object to the section multi object array
+						myObj.addMultipleObject(newAssocName);
+
+						// save the array size after the object was added
+						var afterAddArrayLength = myObj.multipleObjectsArray.length;
+
+						// if the array is still the same length then it means a row needs to be updated
+						if(afterAddArrayLength == beforeAddArrayLength) {
+							var identifier = myObj.uniqueSectionId + '_' + newAssocName.assocNameOccurrence;
+							var editHrefId = identifier + '_editHrefId';
+							var deleteHrefId = identifier + '_deleteHrefId';
+							
+							// reset the displayed name in the rows
+							var editHref = $('#' + editHrefId);
+							var deleteHref = $('#' + deleteHrefId);
+							var newDisplayAddress = newAssocName.getDisplayAddress();
+							var newDisplayName = newAssocName.getDisplayName();
+							var displayNameScreen = newDisplayName;
+							var memMgrColumn = $('#' + this.multiObjectTableId).find("td[data-column='" + identifier + "_memMgrCol']");
+							var displayMemMgr = (newAssocName.assocNameType == "MEM") ? "Member" : "Manager";
+							if (this.uniqueSectionId != "memberManager") displayMemMgr = "";
+							
+							// handle long display names by truncating at 100 and adding ellipses
+							if(displayNameScreen.length > 100) {
+								displayNameScreen = displayNameScreen.substring(0,100) + '...';
+							}
+							
+							// reset the display name in the edit/delete javascript links
+							editHref.html(displayNameScreen).off('click').click({displayName:newDisplayName,sectionObject:myObj,displayAddress:newDisplayAddress},myObj.editMultiAssocNameObject);
+							deleteHref.off('click').click({displayName:newDisplayName,sectionObject:myObj,displayAddress:newDisplayAddress},myObj.deleteMultiAssocNameObject);
+							memMgrColumn.text(displayMemMgr);
+						}
+						
+						// assocName hidden field
+						$('#' + this.uniqueSectionId + '_assocNameOccurrence')	.val(newAssocName.assocNameOccurrence);
+					}
+				}
+				
+				// add the objects to their respective lists
+				if(jsonObj.validatedAddress != undefined) {
+					var validatedAddressObj = Address.createFromView(jsonObj.validatedAddress);
+					myObj.getCbrPageObject().addAddress(validatedAddressObj);
+				}
+				if(jsonObj.validatedIndividual != undefined) {
+					var validatedIndividualObj = Individual.createFromView(jsonObj.validatedIndividual);
+					myObj.getCbrPageObject().addIndividual(validatedIndividualObj);
+				}
+				if(jsonObj.validatedPhone != undefined) {
+					var validatedPhoneObj = Phone.createFromView(jsonObj.validatedPhone);
+					myObj.getCbrPageObject().addPhone(validatedPhoneObj);
+				}
+				if(jsonObj.validatedEmail != undefined) {
+					var validatedEmailObj = Email.createFromView(jsonObj.validatedEmail);
+					myObj.getCbrPageObject().addEmailAddress(validatedEmailObj);
+				}
+				if(jsonObj.prefilContact === null) {
+					myObj.getCbrPageObject().preferencePopup = true;
+				}
+				
+				if(myObj.onSuccessUpdateMethod != undefined) {
+					myObj.onSuccessUpdateMethod(jsonObj);
+				}
+			}
+			
+			// if the page isn't doing the initial load
+			// and if this is a multi object section
+			// and if there are objects in the multi list
+			// iterate the multi object list checking to see if any are invalid, if so, mark the section as invalid
+			if(myObj.initialized && myObj.multiObjectTableId != '' && myObj.multipleObjectsArray.length > 0) {
+				for(var i=0; i < myObj.multipleObjectsArray.length; i++) {
+					if(!myObj.multipleObjectsArray[i].valid) {
+						myObj.valid = false;
+						break;
+					}
+				}
+			}
+			
+			// assign the css class to show/hide the checkmark
+			myObj.setSectionCssClass();
+		}
+		myObj.wasMultiObjUpdateDueToSaveButton = false; //reset it back to default value
+	},
+	handleDeleteResponse: function(jsonResponseString) {
+		var jsonObj = jQuery.parseJSON(jsonResponseString);
+		if(jsonObj != undefined) {
+			if(jsonObj.success == 'true') {
+				// remove the deleted item from the array
+				var index = jsonObj.indexRemoved;
+				this.multipleObjectsArray.splice(index,1);	// second parameter tells it how many to delete
+				
+				// iterate the assocNameArray and reset the occurrence variable for the items
+				for(var i=0; i < this.multipleObjectsArray.length; i++) {
+					var myMultipleObject = this.multipleObjectsArray[i];
+					myMultipleObject.assocNameOccurrence = i;
+				}
+				
+				// remove the row from the table and repaint
+				var table = $('#' + this.multiObjectTableId);
+				var rows = null;
+				
+				// get the rows from the table
+				// protect against the tbody element existing or not
+				if(table.children('tbody').length == 0) {
+					rows = table.children('tr');
+				} else {
+					rows = table.children('tbody').children('tr');
+				}
+
+				// remove the row by index
+				var row = rows[index];
+				if(row != undefined) {
+					$(row).remove();
+				}
+				
+				// repaint the table to compensate for the removed row
+				paintTableGreenBar(this.multiObjectTableId);
+				
+				// check to see if there are any remaining multi object entries.
+				// all current (04/11/2014) multi object sections require at least one entry (except registration member/managers)
+				// if there are none left:
+				// 		1 - hide the multiObjectTable 
+				// 		2 - set the section valid method to false
+				// 		3 - remove the checkmark
+				if(this.multipleObjectsArray.length == 0) {
+					$('#' + this.multiObjectTableId).parent().addClass('displayNone');
+					this.valid = false;	
+					this.dirty = true;
+					this.setSectionCssClass();
+					
+					$('#' + this.uniqueSectionId + '_addEditEntityDiv').find('input[type=text],textarea').val('');
+					
+					$('#' + this.uniqueSectionId + '_addEditEntityDiv').find('input[type=checkbox],input[type=radio]:checked').removeAttr('checked');
+					
+					$('#' + this.uniqueSectionId + '_addEditEntityDiv').find('select').find('option').attr('selected',false);
+					
+					// clear assocName hidden fields
+					$('#' + this.uniqueSectionId + '_assocNameOccurrence')	.val('');
+					$('#' + this.uniqueSectionId + '_assocNameEntityType')	.val('');
+					if(this.uniqueSectionId === 'indDirectKnowledge') {
+						$('#' + this.uniqueSectionId + '_assocNameType')		.val('IDK').change();
+					} else if(this.uniqueSectionId === 'incorporator') {
+						$('#' + this.uniqueSectionId + '_assocNameType')		.val('INC').change();
+					} else if(this.uniqueSectionId === 'reg') {
+						$('#' + this.uniqueSectionId + '_assocNameType')		.val('REG').change();
+					} else if(this.uniqueSectionId === 'organizer') {
+						$('#' + this.uniqueSectionId + '_assocNameType')		.val('ORG').change();
+					} else {
+						$('#' + this.uniqueSectionId + '_assocNameType')		.val('').change();
+					}
+					
+				} 
+				
+				// call the post delete method if it is specified
+				if(this.onSuccessPostDeleteMethod != undefined) {
+					this.onSuccessPostDeleteMethod();
+				}
+				
+			} else {
+				if(this.debug){alert("object failed to be deleted");}
+			}
+		}		
+	},
+	/*
+	 * creates the Page Error Section for displaying input validation errors to user
+	 */
+	createPageErrorSection: function(uniqueSectionId, uniqueSectionTitle) {
+		this.sectionError = new CbrPageError(uniqueSectionId, uniqueSectionTitle);
+	},
+	/*
+	 * Get the multipleObject from the multiObjectsArray by the supplied index
+	 */
+	getMultipleObjectByIndex: function(index) {
+		return this.multipleObjectsArray[index];
+	},
+	/*
+	 * Calls the getMultipleObjectByIndex method to retrieve the assocName object, then sets the field values.
+	 * If the supplied index does not retrieve an assocName object then it creates a new assocName object.
+	 */
+	changeAssocNameValues: function(index) {
+		var assocName = this.getMultipleObjectByIndex(index);
+		
+		// if not found then initialize to a new AssocName object
+		if(assocName == undefined) {
+			assocName = new AssocName();
+			assocName.setIndividual(new Individual());
+			assocName.setAddress(new Address());
+			assocName.assocNameType = this.defaultAssocNameType;
+			assocName.assocNameEntityType = "Indv";
+			assocName.setSigner(new Individual());
+		}
+		
+		// assocName entity type fields
+		var assocNameEntityType = assocName.getAssocNameEntityType();
+		$('#' + this.uniqueSectionId + '_assocNameEntityTypeTable :radio[value="' + assocNameEntityType + '"]').attr('checked',true).click();
+		if('Indv' == assocNameEntityType) {
+			$('#' + this.uniqueSectionId + '_individual_firstName')		.val(assocName.individual.firstName);
+			$('#' + this.uniqueSectionId + '_individual_middleName')	.val(assocName.individual.middleName);
+			$('#' + this.uniqueSectionId + '_individual_lastName')		.val(assocName.individual.lastName);
+			$('#' + this.uniqueSectionId + '_individual_suffixName')	.val(assocName.individual.suffixName);
+		} else if('BofR' == assocNameEntityType) {
+			$('#' + this.uniqueSectionId + '_businessOfRecord_registryNumber')	.val(assocName.businessOfRecord.registryNumber);
+			$('#' + this.uniqueSectionId + '_businessOfRecord_businessName')	.val(assocName.businessOfRecord.businessName).change();
+			$('#' + this.uniqueSectionId + '_businessOfRecord_entityType')		.val(assocName.businessOfRecord.entityType).change();
+		} else if('BNofR' == assocNameEntityType) {
+			var bnofrBusinessNameField = $('#' + this.uniqueSectionId + '_businessNotOfRecord_businessName');
+			// verify it does exist
+			if(bnofrBusinessNameField.length != 0) {
+				bnofrBusinessNameField.val(assocName.businessNotOfRecord.businessName);
+			}
+		}
+		$('#' + this.uniqueSectionId + '_displayName').html(assocName.getDisplayName());
+
+		// address fields
+		$('#' + this.uniqueSectionId + '_address_country')		.val(assocName.address.country).change();
+		$('#' + this.uniqueSectionId + '_address_addressLine1')	.val(assocName.address.addressLine1);
+		$('#' + this.uniqueSectionId + '_address_addressLine2')	.val(assocName.address.addressLine2);
+		$('#' + this.uniqueSectionId + '_address_city')			.val(assocName.address.city);
+		$('#' + this.uniqueSectionId + '_address_zip')			.val(assocName.address.zip);
+		$('#' + this.uniqueSectionId + '_address_state')		.val(assocName.address.state);
+		
+		// set assocName assocAuth fields if present
+		var assocAuth_firstName = $('#' + this.uniqueSectionId + '_assocAuth_firstName');
+		if(assocAuth_firstName.length && assocName.signer != null) {
+			assocAuth_firstName.val(assocName.signer.firstName);
+			$('#' + this.uniqueSectionId + '_assocAuth_middleName')	.val(assocName.signer.middleName);
+			$('#' + this.uniqueSectionId + '_assocAuth_lastName')	.val(assocName.signer.lastName);
+			$('#' + this.uniqueSectionId + '_assocAuth_suffixName')	.val(assocName.signer.suffixName);
+		}
+		// assocName hidden fields
+		$('#' + this.uniqueSectionId + '_assocNameOccurrence')	.val(assocName.assocNameOccurrence);
+		$('#' + this.uniqueSectionId + '_assocNameEntityType')	.val(assocName.assocNameEntityType);
+		$('#' + this.uniqueSectionId + '_assocNameType')		.val(assocName.assocNameType).change();
+		
+		// the setting of these values will cause the dirty indicator to change, reset it to false
+		this.dirty = false;
+
+		// call this method if it was initialized
+		if(this.changeAssocNameSecondaryValues != undefined) {
+			this.changeAssocNameSecondaryValues(assocName);
+		}
+	},
+	findMultiAssocNameObjectIndex: function(displayName, displayddress) {
+		if(this.debug){alert('assocName to find: ' + displayName)};
+		
+		var index = -1;
+		for(var i=0; i < this.multipleObjectsArray.length; i++) {
+			var arrayObj = this.multipleObjectsArray[i];
+			
+			var arrayObjDisplayName = '';
+			if(arrayObj.individual != undefined) {
+				arrayObjDisplayName = arrayObj.individual.displayValue;
+			} else if(arrayObj.businessOfRecord != undefined) {
+				arrayObjDisplayName = arrayObj.businessOfRecord.displayValue;
+			} else if(arrayObj.businessNotOfRecord != undefined) {
+				arrayObjDisplayName = arrayObj.businessNotOfRecord.displayValue;
+			}
+			
+			var arrayObjDisplayAddress = arrayObj.address.displayValue;
+			
+			var equals = (displayName == arrayObjDisplayName  
+						&& displayddress == arrayObjDisplayAddress );
+			
+			if(this.debug){alert('searching array for: [' + displayName + ']' + 
+					'\n' + 'arrayObjDisplayName: [' + arrayObjDisplayName + ']' + 
+					'\n' + 'displayAddress: [' + displayAddress + ']' + 
+				'\n' + 'arrayObjDisplayAddress: [' + arrayObjDisplayAddress + ']' + 
+				'\n' + 'equals: [' + equals + ']')};
+			
+			if(equals) {
+				index = i;
+				break;
+			}
+		}
+		return index;
+	},
+	/* Save the current state of the section
+	 * For example when editing a multi object, save the index and validity of the multi object
+	 * this will be used in the cancel method to return the multi object to its previous state
+	 * 		e.g. opens box and user deletes address, validator reports error and object is marked as invalid
+	 * 		whole section loses its checkmark because multi object is invalid (temporarily)
+	 * 		if cancel is hit then we want to restore the object and section to its preivous valid/invalid state
+	*/
+	saveSectionCurrentState: function(multiObjectIndex) {
+		if(multiObjectIndex > 0) {
+			this.editMultiObjectIndex = multiObjectIndex;
+			this.editMultiObjectPreviousValidState = this.multipleObjectsArray[multiObjectIndex].valid;
+		}
+		this.editMultiObjectSectionPreviousValidState = this.valid;
+	},
+	editMultiAssocNameObject: function(event) {
+		var sectionObject = event.data.sectionObject;
+		var displayName = event.data.displayName;
+		var displayAddress = event.data.displayAddress;
+		
+		var id = event.currentTarget.id;
+		var end = id.indexOf("_editHrefId");
+		var start = id.lastIndexOf("_",end-1)+1;
+		var assocNameIndex = parseInt(id.substring(start,end));		
+		
+		//var assocNameIndex = sectionObject.findMultiAssocNameObjectIndex(displayName, displayAddress);
+		sectionObject.changeAssocNameValues(assocNameIndex);
+		
+		sectionObject.saveSectionCurrentState(assocNameIndex);
+		
+		// when using the edit link for a multi object section, remove the errorCssClass from the fields
+		$('#' + sectionObject.uniqueSectionId + '_addEditEntityDiv').find('input,textarea,select').each(function(){
+			var myErrorCssClass = sectionObject.errorCssClass;
+			var myNoErrorCssClass = sectionObject.noErrorCssClass;
+			// if there is an error css style applied, remove it
+			var field = $(this);
+			if(field.hasClass(myErrorCssClass)) {
+				field.removeClass(myErrorCssClass);
+				field.addClass(myNoErrorCssClass);
+			}
+		});
+
+		sectionObject.showMultiAssocNameEditBox(sectionObject);
+	},
+	restoreMultiObjectToPreviousState: function() {
+		// if a valid object was retrieved, then restore the multi object to its state before any validations were ran
+		if(this.multipleObjectsArray[this.editMultiObjectIndex] != undefined) {
+			this.multipleObjectsArray[this.editMultiObjectIndex].valid = this.editMultiObjectPreviousValidState;
+		}
+		this.valid = this.editMultiObjectSectionPreviousValidState;
+		this.setSectionCssClass();
+		
+		// clear the editMultiObject values that were previously saved when the popup dialog was opened
+		this.editMultiObjectIndex = '';
+		this.editMultiObjectPreviousValidState = '';
+		this.editMultiObjectSectionPreviousValidState = '';
+	},
+	addMultiObject: function(event) {
+		event.preventDefault();
+		var parentObject = event.data.parentObject;
+		
+		parentObject.changeAssocNameValues();
+			
+		// remove the value from the entity type radio fields
+		$('#' + parentObject.uniqueSectionId + '_assocNameEntityTypeTable input:radio:checked').each(function(){
+			this.checked = false;
+		}).click();
+		$('#'+parentObject.uniqueSectionId+'_businessOfRecord_businessName').val('');
+		$('#'+parentObject.uniqueSectionId+'_businessOfRecord_businessName_div').text('');
+		parentObject.saveSectionCurrentState(-1);
+			
+		parentObject.showMultiAssocNameEditBox(parentObject);
+	},
+	showMultiAssocNameEditBox: function(parentObject) {
+		parentObject.multiObjectPopupDiv.dialog('open');
+		// r.young 2014-01-04 - I don't really like how the these classes are being removed, seems too broad, but it works for now
+		$('.ui-widget').removeClass('ui-widget');
+		$('.my-selectwidget-content').removeClass('my-selectwidget-content');
+	},
+	deleteMultiAssocNameObject: function(event) {
+		event.preventDefault();
+		var sectionObject = event.data.sectionObject;
+		var displayName = event.data.displayName;
+		var displayAddress = event.data.displayAddress;
+		
+		// check to see if database updates are allowed at this time
+		if(!sectionObject.getCbrPageObject().allowDatabaseUpdate) {
+			if(sectionObject.debug){alert('The CbrPage allowDatabaseUpdate is set to false.  No updates can be done at this time.');}
+			return;
+		}
+		
+		var assocNameIndex = sectionObject.findMultiAssocNameObjectIndex(displayName, displayAddress);
+		
+		// create a new assocName object and populate it with the type and occurrence
+		var assocNameToDelete = new AssocName(sectionObject.defaultAssocNameType,'',assocNameIndex);
+		var data = 'jsonString=' + JSON.stringify(assocNameToDelete);
+		if(sectionObject.debug){alert("jsonData: " + data);}
+
+		// block the user from modifications while ajax call is underway
+		var parentObject = sectionObject;
+		
+		// perform the deletion
+		$.ajax({
+		    type: 'POST',
+		    url: parentObject.deleteUrl,
+		    data: data,
+			async : false,
+			beforeSend: function() {
+				blockUI();
+			},
+		    success: function(data) {
+		    	parentObject.successDeleteFunction(parentObject,data);
+
+		    	// remove the block on either success or error
+				unblockUI();
+			}
+		});
+	},
+	/*
+	 * Sets the CSS class for the section.  This CSS class relates to the triangle image
+	 * and the checkmark to the left when there is valid data 
+	 */
+	setSectionCssClass: function() {
+		// get a the reference to the span element
+		var myVar = this.sectionHeader.find("> .ui-icon");
+		
+		// remove collapse and expanded css classes
+		myVar.removeClass('accordionCollapsed accordionExpanded accordionChkCollapsed accordionChkExpanded');
+		
+		// build the new css class to assign
+		var cssClass = 'accordion';
+		
+		if(this.valid) {
+			// set the checkmark
+			cssClass = cssClass + 'Chk';
+		}
+		
+		// determine if its collapsed or expanded
+		if(this.visible) {
+			cssClass = cssClass + 'Expanded';
+		} else {
+			cssClass = cssClass + 'Collapsed';
+		}
+		
+		// assign the created css class name
+		myVar.addClass(cssClass);
+	},
+	/*
+	 * Returns the value of the requiredFieldId element
+	 */
+	getRequiredFieldValue: function() {
+		var requiredFieldValue = '';
+		if(this.requiredFieldId != '') {
+			// if the requiredFieldId was setup, then get the field's value
+			var field = $('#' + this.requiredFieldId);
+			var fieldType = field[0].type;
+			
+			if(fieldType == 'select-multiple') {
+				// for select-multiple elements (such as ABN County) there won't be anything 'selected' so go see if there are any options in the select
+				var options = [];
+				var index = 0;
+				$.each(field.find('option'), function() {
+					options[index++] = this.value;
+				});
+				requiredFieldValue = options;
+			} else if(fieldType == 'radio') {
+				var radioName = field[0].name;
+				var checkedInput = $('input:radio[name=' + radioName + ']:checked');
+				requiredFieldValue = checkedInput.val();
+			} else {
+				requiredFieldValue = field.val();
+			}
+		}
+		if(requiredFieldValue == undefined) {
+			requiredFieldValue = '';
+		}
+		return requiredFieldValue;
+	},
+	/*
+	 * This method is called by the initialize method in this object.
+	 */
+	performInitialValidation: function() {
+		// if the forcePreValidationOfSection in the cbrPageObject is set then perform validation for this section
+		if(this.getCbrPageObject().forcePreValidationOfSection) {
+			
+			if(this.multiObjectTableId != '') {
+				// if this is a multiple object section then perform the initialization for 
+				// each of the multi objects
+				// the multiple objects should already have been added to the array by the time this method runs at page load
+				if(this.multipleObjectsArray.length > 0) {
+					var sectionValid = true;	// start out with the section as valid	
+					for(var i = 0; i < this.multipleObjectsArray.length; i++) {
+						this.changeAssocNameValues(i);
+						this.update();
+						
+						// if any multi object is not valid then save that for later
+						// continue validating the rest of the multi objects so that their errors will show up in the page error list
+						if(!this.valid) {
+							sectionValid = false;
+						}
+					}
+					if(sectionValid) {
+						this.valid = true;
+					} else {
+						this.valid = false;
+					}
+				} else {
+					// call the update once if there are no multi objects present
+					// e.g. member/manager has the option of saying no to adding any
+					this.update();	
+				}
+			} else {
+				// if this isn't a multi object section, just run the sections update method
+				this.update();
+			}
+		}
+	}
+};

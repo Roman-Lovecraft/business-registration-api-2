@@ -14,9 +14,10 @@ def fill_form_oregon(credentials, data) -> str:
     
 
     options = Options()
-    options.add_argument("--user-data-dir=C:\business-registration-api-2")  # Укажите другую папку
+    options.add_argument(r"--user-data-dir=C:\business-registration-api-2")
 
-    driver = webdriver.Chrome(options=chrome_options)
+
+    driver = webdriver.Chrome(options=options)
     wait = WebDriverWait(driver, 10)
 
     try:
@@ -44,7 +45,7 @@ def fill_form_oregon(credentials, data) -> str:
         login_button = driver.find_element(By.NAME, "Login")
         login_button.click()
 
-        time.sleep(5)
+        time.sleep(20)
         #  ВАЖНО!!! Если ранее не были созданы шаблоны с этого акка, то строки 43-47 нужно удалить
         cancel_button = wait.until(EC.element_to_be_clickable((By.ID, "cancelButton"))) 
         cancel_button.click()  
@@ -93,7 +94,7 @@ def fill_form_oregon(credentials, data) -> str:
         state_select = driver.find_element(By.ID, "busOverview_principalAddr_state")
         Select(state_select).select_by_value('OR')
 
-        time.sleep(10)
+        time.sleep(20)
         continue_button = driver.find_element(By.ID, "pageButton3")
         continue_button.click()
 
@@ -105,7 +106,7 @@ def fill_form_oregon(credentials, data) -> str:
         continue_button = driver.find_element(By.XPATH, "//span[contains(text(),'Continue')]")
         continue_button.click()
 
-        time.sleep(10)
+        time.sleep(20)
         # Заполнение данных уведомлений (Email)
         notification_select = Select(wait.until(EC.presence_of_element_located((By.ID, "eSelection"))))
         notification_select.select_by_value("EMAIL")
@@ -120,7 +121,7 @@ def fill_form_oregon(credentials, data) -> str:
         continue_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(),'Continue')]")))
         continue_button.click()
 
-        time.sleep(10)
+        time.sleep(20)
         # Выбор адреса из списка
         select_from_list_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "jurisdiction_pplAddrSelectListHrefId"))
@@ -133,7 +134,7 @@ def fill_form_oregon(credentials, data) -> str:
         continue_button = driver.find_element(By.XPATH, "//span[contains(text(),'Continue')]")
         continue_button.click()
 
-        time.sleep(10)
+        time.sleep(20)
         # Заполнение данных для зарегистрированного агента
         individual_radio = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "registeredAgent_indvAssocNameEntityType"))
@@ -160,7 +161,7 @@ def fill_form_oregon(credentials, data) -> str:
         )
         continue_button.click()
 
-        time.sleep(10)
+        time.sleep(20)
         # Добавление организатора
         add_organizer_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//span[contains(text(),'Add Organizer')]"))
@@ -191,7 +192,7 @@ def fill_form_oregon(credentials, data) -> str:
         )
         continue_button.click()
 
-        time.sleep(10)
+        time.sleep(20)
         # Добавление лица с прямыми знаниями
         add_individual_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "indDirectKnowledge_multiObjectAdd"))
@@ -217,7 +218,7 @@ def fill_form_oregon(credentials, data) -> str:
             EC.element_to_be_clickable((By.XPATH, "//a[contains(@onclick, 'selectedOption')]"))
         )
         select_first_address.click()
-        time.sleep(10)
+        time.sleep(20)
         save_button = WebDriverWait(driver, 20).until(
             EC.element_to_be_clickable((By.ID, "indDirectKnowledge_saveButton"))
         )
@@ -226,13 +227,13 @@ def fill_form_oregon(credentials, data) -> str:
         except Exception:
             print("Не удалось кликнуть стандартным способом, пробуем JavaScript")
             driver.execute_script("arguments[0].click();", save_button)
-        time.sleep(10)
+        time.sleep(20)
         continue_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//span[contains(text(),'Continue')]"))
         )
         continue_button.click()
 
-        time.sleep(10)
+        time.sleep(20)
         # Выбор управления участниками
         member_managed_radio = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "management_trueType"))
@@ -250,7 +251,7 @@ def fill_form_oregon(credentials, data) -> str:
             EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Continue')]"))
         )
         continue_button.click()
-        time.sleep(10)
+        time.sleep(20)
         llcr = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "professionalServices_falseType"))
         )
@@ -259,12 +260,12 @@ def fill_form_oregon(credentials, data) -> str:
             EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Continue')]"))
         )
         continue_button.click()
-        time.sleep(10)
+        time.sleep(20)
         continue_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Continue')]"))
         )
         continue_button.click()
-        time.sleep(10)
+        time.sleep(20)
         continue_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Continue')]"))
         )
@@ -273,7 +274,7 @@ def fill_form_oregon(credentials, data) -> str:
             EC.element_to_be_clickable((By.ID, "goToSignatureButton"))
         )
         gtsb.click()
-        time.sleep(10)
+        time.sleep(20)
         # Выбор титула
         title_select = WebDriverWait(driver, 15).until(
             EC.element_to_be_clickable((By.ID, "selectTitleHref0"))
@@ -283,7 +284,7 @@ def fill_form_oregon(credentials, data) -> str:
             EC.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'Authorized Agent')]"))
         )
         organizer_option.click()
-        time.sleep(10)
+        time.sleep(20)
         title_select = WebDriverWait(driver, 15).until(
             EC.element_to_be_clickable((By.ID, "selectNameHref0"))
         )
@@ -292,7 +293,7 @@ def fill_form_oregon(credentials, data) -> str:
             EC.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'John Doe')]"))
         )
         manager_option.click()
-        time.sleep(10)
+        time.sleep(20)
         # Подписание
         sign_checkbox = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "signatureCheckBox0"))

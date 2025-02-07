@@ -1,0 +1,696 @@
+	
+//id of popup used in scrollToDialog function
+//var popId;
+
+//set width of popup based on window size
+	var responseWidth;	
+	var view;
+	if (window.innerWidth > 991){
+		responseWidth = '40vw';
+		view = 'desktop';
+		} else if (window.innerWidth > 767) {
+			responseWidth = '60vw';
+			view = 'tablet'
+		} else {
+			responseWidth = '95vw';
+			view = 'mobile'
+		}
+
+
+/*
+ * clears div element values.
+ * select: set to first option
+ * input: set to ''
+ * textarea: set to ''
+ * checkbox: set to false
+ * radio: no change, this would have to be handled manually
+ * 
+ * usage: clearChildren(document.getElementById('IdOfTheDiv'));
+ * source: http://stackoverflow.com/questions/1500012/simple-way-to-clear-the-value-of-any-input-inside-a-div
+ */
+function clearChildren(element) {
+	   for (var i = 0; i < element.childNodes.length; i++) {
+	      var e = element.childNodes[i];
+	      if (e.tagName) switch (e.tagName.toLowerCase()) {
+	         case 'input':
+	            switch (e.type) {
+	               case "radio":
+	               case "checkbox": e.checked = false; break;
+	               case "button":
+	               case "submit":
+	               case "image": break;
+	               default: e.value = ''; break;
+	            }
+	            break;
+	         case 'select': e.selectedIndex = 0; break;
+	         case 'textarea': e.innerHTML = ''; break;
+	         default: clearChildren(e);
+	      }
+	   }
+	}
+
+$.fn.clearValues = function() {
+    this.find('input:text, textarea, select').val('');
+    this.find('input:checkbox, input:radio').prop('checked',false);
+}
+
+function selectPopup(uniqueId, openerElementId, optionArray, optionArrayVarName, onSelectMethod, width, height) {
+	// create div
+	var popupDivSuffix = 'PopupDiv';
+	//set up clickaway behavior.
+	$('body').bind('click', function(e) {
+        if($('#' + uniqueId + popupDivSuffix).dialog('isOpen')
+            && !$(e.target).closest('#' + uniqueId + popupDivSuffix).length
+            && !$(e.target).is('#' + uniqueId + "SelectListHrefId")
+        ) {
+        	//$('body').unbind('click');
+    		removePopup(uniqueId + popupDivSuffix);
+        }
+    });
+	
+	var popupDiv = $('<div id="' + uniqueId + popupDivSuffix + '">');
+	popupDiv.append('<a href="javascript:void(0)" id="' + uniqueId + 'Href" style="font-size:.8em;float:right;margin-top:-.50em;margin-right:-1em" onclick="return false">X</a>');
+	for(var i=0; i < optionArray.length; i++){
+		var displayValue = optionArray[i].displayValue;
+		popupDiv.append('<a class="popupListDetail actionPromptStyle smallText" href="#" onclick="selectedOption(' + optionArrayVarName + '[' + i + '],\'' + uniqueId + popupDivSuffix +'\','+ onSelectMethod + ',\'' + uniqueId + '\'); return false">' + displayValue + '</a><br/>');  
+	}
+	
+	// assign jquery dialog features
+	var options = {
+			autoOpen:false,
+			modal:true,
+			resizable:false,
+			dialogClass:'my-selectwidget-content',
+			position:{my:'left top',at:'left bottom',of: '#'+openerElementId, collision: 'flip'}
+		};
+	
+	popupDiv.dialog(options);
+
+
+ // if width was passed in then set its value, if not then set the defaults
+//	if(width == undefined) {
+//		popupDiv.dialog('option','width','auto');
+//		popupDiv.dialog('option','maxWidth',300);
+//	} else {
+//		popupDiv.dialog('option','width',width);
+//	}
+	
+	//set responsive width
+	popupDiv.dialog('option','width',responseWidth);
+	
+	// if height was passed in then set its value, if not then set the defaults
+	if(height == undefined) {
+		popupDiv.dialog('option','height','auto');
+	} else {
+		popupDiv.dialog('option','height',height);
+	}
+	
+	popupDiv.dialog("widget");
+	popupDiv.css("background", "WhiteSmoke","background-color","WhiteSmoke");
+	popupDiv.siblings('div.ui-dialog-titlebar').remove();
+	$('#' + uniqueId + 'Href').click(function(){
+		removePopup(uniqueId + popupDivSuffix);
+	});
+	
+	
+	var currentPopupId = this.cbrPageObj.currentPopupId;
+	if (currentPopupId != '') {
+		removePopup(currentPopupId);
+	}
+	if (this.cbrPageObj != null) {
+		this.cbrPageObj.currentPopupId = uniqueId + popupDivSuffix;
+	}
+	
+	popupDiv.dialog({
+	    open: function(event, ui) {
+			const overlay = $('.ui-widget-overlay').last();
+
+				// according to http://bugs.jqueryui.com/ticket/4820 maxHeight does now work with 'auto' height
+				// hence, workaround below. it will not be necessary starting with jQuery 1.10 - ellsag
+	        $(this).css({
+	        	'min-height': 10, 
+	        	'max-height': 190, 
+	        	'overflow-y': 'auto'     	
+	        	}); 
+	        
+	    }
+	});
+	$('.ui-widget-overlay').first().css({
+				'z-index': 1000
+			});
+	popupDiv.dialog("open");
+	
+}
+
+function selectedOption(selectedObject, popupDivId, onSelectMethod, uniqueId) {
+	removePopup(popupDivId);
+	onSelectMethod(uniqueId, selectedObject);
+	
+	//prevent page from scrolling onclick
+	return false;
+}
+function removePopup(popupDivId) {
+	$('.ui-widget-overlay').first().css({
+		'z-index': 999
+	});
+
+	$('#' + popupDivId).remove();
+	if (this.cbrPageObj != null)
+		this.cbrPageObj.currentPopupId = '';
+	$('body').unbind('click');
+	
+}
+
+// when called on a select element this function sorts the options alphabetically by its text value 
+$.fn.sort_select_box = function(){
+	var selectBox = $(this);
+	
+	// retrieve the options from the select box
+    var my_options = selectBox.find('option');
+    
+    // sort the options alphabetically
+    my_options.sort(function(a,b) {
+        if (a.text > b.text) return 1;
+        else if (a.text < b.text) return -1;
+        else return 0
+    });
+    // clear the options and replace them with the sorted options
+    selectBox.empty().append( my_options );
+    
+    // trigger the onchange event - this triggers things like the dirty indicator for those that have it
+    selectBox.change();
+    
+    return selectBox;
+}
+
+/*
+ * Blocks the page from the user to allow processing to complete 
+ * The blockUIDiv div element is created in the standardLayout.tag
+ * Before the element is passed in as the message, the displayNone css class is removed which makes the div visible
+ */
+function blockUI() {
+	var blockUIDiv = $('#blockUIDiv');
+	if(blockUIDiv.length > 0) {
+		$.blockUI({ message: blockUIDiv.removeClass('displayNone'), baseZ:2000 });
+	} else {
+		$.blockUI({baseZ:2000});
+	}
+}
+/*
+ * Unblocks the page after processing is complete 
+ */
+function unblockUI() {
+	$.unblockUI(); 
+	var blockUIDiv = $('#blockUIDiv');
+	if(blockUIDiv.length > 0) {
+		$('#blockUIDiv').addClass('displayNone');
+	}
+}
+
+function closeWindow() { 
+window.open('','_parent',''); 
+window.close(); 
+} 
+
+/**
+ * Moves the selected option from one select element to another.  Sorts the target select element's options after adding it.
+ * @param fromSelectId
+ * @param toSelectId
+ */
+function transferSelectOption(fromSelectId, toSelectId) {
+	var fromSelect = $('#' + fromSelectId);
+	var toSelect = $('#' + toSelectId);
+	fromSelect.find('option:selected').remove().appendTo(toSelect);
+	toSelect.find('option:selected').removeAttr("selected");
+	toSelect.sort_select_box();
+}
+
+/**
+ * Creates a jquery Dialog widget.  Takes the content of the calling object and puts it into the dialog.
+ * 
+ * @param uniqueId the section unique id or some other value to guarantee uniqueness when the popup is created
+ * @param position the object specifying position options.  jquery default: { my: "center", at: "center", of: window }
+ * @param width optional. the width of the dialog.  If not specified a minWidth of 100 and maxWidth of 300 will be assigned.
+ * @param height optional.  the height of the div.  If not specified then a height of 'auto' will be assigned.
+ */
+$.fn.createDialog = function(uniqueId, position, width, height) {
+	// create div
+	var popupDivSuffix = 'PopupDiv';
+	var popupCloserId = 'Href';
+	
+	var popupDiv = $('<div id="' + uniqueId + popupDivSuffix + '"></div>');
+	
+	popupDiv.append('<a href="#" id="' + uniqueId + popupCloserId + '" style="font-size:.8em;float:right;margin-top:-.50em;margin-right:-1em">X</a>');
+	
+	// add the html content to the popup div
+	popupDiv.append(this);
+	
+	// assign jquery dialog features
+	popupDiv.dialog({
+		autoOpen:true,
+		modal:false,
+		resizable:false,
+		dialogClass:'my-selectwidget-content'		
+	});			  
+	
+	// if width was passed in then set its value, if not then set the defaults
+	if(width == undefined) {
+		popupDiv.dialog('option','minWidth',100);
+		popupDiv.dialog('option','maxWidth',300);
+	} else {				
+		popupDiv.dialog('option','width',width);
+	}
+	
+	// if height was passed in then set its value, if not then set the defaults
+	if(height == undefined) {
+		popupDiv.dialog('option','maxHeight',200);
+	} else {
+		popupDiv.dialog('option','height','auto');
+	}
+	
+	// if position was passed in then set its value, if not then use the default from: http://api.jqueryui.com/dialog/#option-position
+	// position needs to be specified last so that centering happens after the width and height are set
+//	if(position != undefined) {
+//		popupDiv.dialog('option','position',position);
+//	} else {
+		popupDiv.dialog('option','position',{ my: "center", at: "top+50%", of: window });
+//	}
+	
+	popupDiv.dialog("widget");
+	popupDiv.css("background", "WhiteSmoke","background-color","WhiteSmoke");
+	popupDiv.siblings('div.ui-dialog-titlebar').remove();
+	$('#' + uniqueId + popupCloserId).click(function(){
+		removePopup(uniqueId + popupDivSuffix);
+	});
+	
+	$('body').bind('click', function(e) {
+		if($('#' + uniqueId + popupDivSuffix).dialog('isOpen')
+				&& !$(e.target).is('.ui-dialog, a')
+				&& !$(e.target).closest('.ui-dialog').length
+		) {
+			$('body').unbind('click');
+			removePopup(uniqueId + popupDivSuffix);
+		}
+	});
+}
+
+
+/**
+ * Creates a jquery Dialog widget.  Takes the content of the calling object and puts it into the dialog.
+ * 
+ * @param uniqueId the section unique id or some other value to guarantee uniqueness when the popup is created
+ * @param buttonsObject the object containing the buttons to use along the their functions to execute
+ * @param position the object specifying position options.  jquery default: { my: "center", at: "center", of: window }
+ * @param width optional. the width of the dialog.  If not specified a minWidth of 100 and maxWidth of 300 will be assigned.
+ * @param height optional.  the height of the div.  If not specified then a height of 'auto' will be assigned.
+ * @param autoOpen optional.  whether or not to immediately open the dialog.  If not specified then a value of 'true' will be assigned.
+ * @param dialogCloseFunction optional. this function is assigned to the the X in the top right that closes the dialog. Use if there needs to be extra functionality besides just closing the dialog.  the function should be defined as having two parameters.  e.g. function(event,ui) { doSomthing(); }  
+ */
+$.fn.createModalDialog = function(uniqueId, title, buttonsArray, position, width, height, autoOpen, dialogCloseFunction) {
+	// create div
+	var popupDivSuffix = 'PopupDiv';
+	var popupCloserId = 'Href';
+//	popId =  uniqueId + popupDivSuffix;
+	var popupDiv = $('<div id="' + uniqueId + popupDivSuffix + '"></div>');
+	
+	//popup closer button
+	//popupDiv.append('<a href="#" id="' + uniqueId + popupCloserId + '" style="font-size:.8em;float:right;margin-top:-.50em;margin-right:-1em">X</a>');
+
+	// add the html content to the popup div
+	popupDiv.append(this);
+	
+	if(autoOpen == undefined) {
+		autoOpen = true;
+	}
+	
+	// assign jquery dialog features
+	popupDiv.dialog({
+		autoOpen:autoOpen,
+		modal:true,
+		resizable:true,
+		dialogClass:'my-selectwidget-content',		
+		title: title,
+		buttons: buttonsArray,
+//		open: function () {
+//			scrollToDialog();
+//	      }
+				
+	});			  
+	
+	if(dialogCloseFunction != undefined) {
+		popupDiv.bind('dialogclose', dialogCloseFunction);
+	}
+	
+	// if width was passed in then set its value, if not then set the defaults
+	if(width == undefined) {
+		popupDiv.dialog('option','minWidth',100);
+		popupDiv.dialog('option','maxWidth',300);
+	} else {
+		popupDiv.dialog('option','width',width);
+	}
+	
+	// if height was passed in then set its value, if not then set the defaults
+	if(height == undefined) {
+		popupDiv.dialog('option','maxHeight',500);
+	} else {
+		popupDiv.dialog('option','height','auto');
+	}
+	
+		
+	popupDiv.dialog("widget");
+	popupDiv.css("background", "WhiteSmoke","background-color","WhiteSmoke");
+//	popupDiv.siblings('div.ui-dialog-titlebar').remove();
+	$('#' + uniqueId + popupCloserId).click(function(){
+		removePopup(uniqueId + popupDivSuffix);
+	});
+	
+
+	return popupDiv;
+
+	
+}
+
+//function scrollToDialog(){
+//	window.alert("test me");
+//	var $container = $("html,body");
+//	var $scrollTo = popId;
+//	var $scrollTo = $('#aboutListSmall');
+//	$container.animate({scrollTop: $(popId).offset().top - $container.offset().top });	
+//}
+
+
+
+$.fn.createModalOkDialog = function(uniqueId, title, position, width, height, closeDialog, autoOpen) {
+	var closeFunction = null;
+	// if closeDialog var is true, then we just want to close the dialog, rather than completely removing it from the html of the page
+	if(closeDialog) {
+		closeFunction = function() {
+			// this function just closes the dialog
+			$(this).dialog('close'); 
+		};
+	} else {
+		closeFunction = function() {
+			// this function completely removes the html from the page
+			$(this).remove(); 
+		};
+	}
+	
+	if(autoOpen == undefined) {
+		autoOpen = true;
+	}
+		
+	return this.createModalDialog(uniqueId, title, 
+			[ { text: "Ok", id: "okButton", 
+				click: closeFunction
+			  }
+			], position, width, height, autoOpen);
+	
+}
+
+
+
+$.fn.createModalOkDialogWhichOnCloseEnablesButtonsSpecifiedInArray = function(uniqueId, title, idsOfButtonsToEnableOnClose, position, width, height, closeDialog, autoOpen) {
+	var closeFunction = null;
+	// if closeDialog var is true, then we just want to close the dialog, rather than completely removing it from the html of the page
+	if(closeDialog) {
+		closeFunction = function() {
+			if((idsOfButtonsToEnableOnClose !== undefined) && (idsOfButtonsToEnableOnClose !== null) && (idsOfButtonsToEnableOnClose.length > 0)) {
+				for(var i=0; i<idsOfButtonsToEnableOnClose.length; i++) {
+					
+					var idOfButtonToEnableOnDialogClose = idsOfButtonsToEnableOnClose[i];
+					
+					if((idOfButtonToEnableOnDialogClose !== undefined) && (idOfButtonToEnableOnDialogClose !== null)) {
+						$('#'+idOfButtonToEnableOnDialogClose).prop("disabled", false);
+						$('#'+idOfButtonToEnableOnDialogClose).css("opacity", "1");
+						$('#'+idOfButtonToEnableOnDialogClose).css("cursor", "pointer");
+					}
+				}
+			}
+			// this function just closes the dialog
+			$(this).dialog('close'); 
+		};
+	} else {
+		closeFunction = function() {
+			if((idsOfButtonsToEnableOnClose !== undefined) && (idsOfButtonsToEnableOnClose !== null) && (idsOfButtonsToEnableOnClose.length > 0)) {
+				
+				for(var i=0; i<idsOfButtonsToEnableOnClose.length; i++) {
+					
+					var idOfButtonToEnableOnDialogClose = idsOfButtonsToEnableOnClose[i];
+					
+					if((idOfButtonToEnableOnDialogClose !== undefined) && (idOfButtonToEnableOnDialogClose !== null)) {					
+						$('#'+idOfButtonToEnableOnDialogClose).prop("disabled", false);
+						$('#'+idOfButtonToEnableOnDialogClose).css("opacity", "1");
+						$('#'+idOfButtonToEnableOnDialogClose).css("cursor", "pointer");
+					}
+				}
+			}
+			// this function completely removes the html from the page
+			$(this).remove(); 
+		};
+	}
+	
+	if(autoOpen == undefined) {
+		autoOpen = true;
+	}
+		
+	return this.createModalDialog(uniqueId, title, 
+			[ { text: "Ok", id: "okButton", 
+				click: closeFunction
+			  }
+			], position, width, height, autoOpen, closeFunction);
+	
+}
+
+
+function initializeFullScreen(fullScreenHrefId, fullScreenVar) {
+	// set the global variable
+	if(fullScreenVar == 'true') {
+		g_fullScreenVar = true;
+	} else {
+		g_fullScreenVar = false;
+	}
+	
+	// run the function once
+	updateFullScreen(fullScreenHrefId);
+	
+	// assign click function to toggle fullscreen
+	$('#' + fullScreenHrefId).click(function(event) {
+		// toggle the global variable
+		g_fullScreenVar = !g_fullScreenVar;
+		// call the update function
+		updateFullScreen(fullScreenHrefId);
+	});
+}
+
+var g_fullScreenText = 'Full Screen';
+var g_exitFullScreenText = 'Exit Full Screen';
+var g_fullScreenVar = false;
+
+function updateFullScreen(fullScreenHrefId) {
+	// class to hide elements
+	var displayNoneCssClass = 'displayNone';
+	
+	var fullScreenHref = $('#' + fullScreenHrefId);
+
+	// header elements to show/hide
+	var banner = $('#banner');
+	
+	// footer elements to show/hide
+	var footer = $('#footer');
+	
+	// menu elements to show/hide
+	var menuItemsIdentifingClass = 'menuItemShowFullScreenOnly';
+	
+	if(g_fullScreenVar) {
+		fullScreenHref.text(g_exitFullScreenText);
+		
+		// hide elements
+		banner.addClass(displayNoneCssClass);
+		footer.addClass(displayNoneCssClass);
+
+		// show elements
+		$('.' + menuItemsIdentifingClass).each(function() {
+			$(this).removeClass(displayNoneCssClass);
+		});
+	} else {
+		fullScreenHref.text(g_fullScreenText);
+		
+		// show elements
+		banner.removeClass(displayNoneCssClass);
+		footer.removeClass(displayNoneCssClass);
+		
+		// hide elements
+		$('.' + menuItemsIdentifingClass).each(function() {
+			$(this).addClass(displayNoneCssClass);
+		});
+	}
+	
+	// unselect the href
+	fullScreenHref.blur();
+	
+	// perform the page resizing
+	// this function exists in brStandardPageLoad.js
+	$(window).resize(); //on page load    
+	
+	// update the session variable
+	$.ajax({
+		type: "POST",
+		url: "globalAjax/fullScreen.action?fullScreen=" + g_fullScreenVar,
+		data: '',
+		success: function(){
+		    
+		}
+	});
+}
+
+function escapeSpecialChars(str) {
+    return str          
+    .replace(/[\\]/g, '\\\\')
+    .replace(/[\/]/g, '\\/')
+    .replace(/[\b]/g, '\\b')
+    .replace(/[\f]/g, '\\f')
+    .replace(/[\n]/g, '\\n')
+    .replace(/[\r]/g, '\\r')
+    .replace(/[\t]/g, '\\t')
+    .replace(/[\"]/g, '\\"')
+    .replace(/\\'/g, "\\'"); 
+};
+  
+function setFocusOnBusinessName() {
+	$(document).ready(function() {
+		var busName = $('#busOverview_businessName').val();
+		if (busName.length == 0)
+			$('#busOverview_businessName').focus();
+	});
+};
+
+/**
+ * use this method to check if the string contains any of the substrings in the array
+ * substrings can be initialized as: ["substring1","substring2","substring3","substring4"]
+ * e.g.
+ * 		if(containsAny("abcdefghijklmnopqurtuvwxyz",["fsda","rewq","7890",";lkj"])) {
+ * 			// no match was found so this code won't get executed
+ * 		}
+ * 		if(containsAny("abcdefghijklmnopqurtuvwxyz",["hijk","rewq","7890",";lkj"])) {
+ * 			// match was found so this code will get executed
+ * 		}
+ */
+function containsAny(string, substrings){
+    for(var i in substrings){
+        var substring = substrings[i];
+        if (string.indexOf(substring) > -1){
+            return true;
+        }
+    }
+    return false;
+}
+
+function changeTabOrder() {
+	// tabindex of busOrgType and help link are always 140 and 141
+	var startTabIdx = 142;
+	var testme = $("#busOverview_busName_chkName");
+	$("#busOverview_busName_chkName").attr('tabindex',startTabIdx++);
+	$("#busOverview_actDesr_help").attr('tabindex',startTabIdx++);
+	$("#busOverview_emailAddressSelectListHrefId").attr('tabindex',startTabIdx++);
+	$("#busOverview_emailAddressClearEmailHrefId").attr('tabindex',startTabIdx++);
+	$("#busOverview_principalAddrSelectListHrefId").attr('tabindex',startTabIdx++);
+	$("#busOverview_principalAddrClearAddressHrefId").attr('tabindex',startTabIdx++);
+	$("#clearFormAction").attr('tabindex',startTabIdx++);
+	$("#busOverview_businessContact_phoneSelectListHrefId").attr('tabindex',startTabIdx++);
+	$("#busOverview_businessContact_phoneClearPhoneHrefId").attr('tabindex',startTabIdx++);
+}
+
+/*
+ * Gets the value of a request parameter
+ * Usage:
+ * 		url: http://localhost:7009/cbrbr/renewal.action?registryNumber=abn
+ * 		javascript call: getURLParameter('registryNumber');
+ * 		returns: abn
+ * this function is talking about jquery but it doesn't actually use jquery, it's just javascript
+ * source: http://jquerybyexample.blogspot.com/2012/06/get-url-parameters-using-jquery.html
+ */
+function getURLParameter(sParam) {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) {
+            return sParameterName[1];
+        }
+    }
+}
+
+/**
+ * Applies the green bar pattern to the rows in the table.
+ * @param tableId		table element id
+ * @param rowsPerBar	number of rows to have in each bar, optional.  default is 1
+ */
+function paintTableGreenBar(tableId, rowsPerBar) {
+	// recolor rows to compensate for the deleted row
+	var table = $('#' + tableId);
+	var rows = null;
+	
+	// get the rows from the table
+	// protect against the tbody element existing or not
+	if(table.children('tbody').length == 0) {
+		rows = table.children('tr');
+	} else {
+		rows = table.children('tbody').children('tr');
+	}
+	
+	// set rowsPerBar default if it wasn't supplied
+	if(rowsPerBar == undefined) {
+		rowsPerBar = 1;
+	}
+	
+	// starts with odd
+	var rowClass = 'even';
+	rowClass = rowClass == 'odd' ? 'even': 'odd';
+	if(rows != undefined) {
+		// start at the second row entry
+		// NOTE: the incrementing for this 'for' loop is done below, not as part of the loop
+		// if it was specified in the for construct we'd actually be skipping rows
+		for(var i=0; i < rows.length; ) {
+			// create a variable to track the number of rows to apply the class before switching css class
+			var barCount = 0;
+			
+			// apply the css class to the number of rows specified
+			while(barCount < rowsPerBar) {
+				// get the current row					
+				var currentRow = rows[i];
+
+				// remove the greenbar css classes for the row and add specified css greenbar class
+				$(currentRow).removeClass('even odd').addClass(rowClass);
+				
+				// increment the row counter to get the next row 
+				i++;
+				
+				// increment the barCount
+				barCount++;
+			}
+			// switch the css class
+			rowClass = rowClass == 'odd' ? 'even': 'odd';
+		}
+	}
+}
+
+function keystrokeValidation(event) {
+    var keynum;
+    // For Internet Explorer
+    if (window.event) {
+        keynum = event.keyCode;
+    }
+    // For Netscape/Firefox/Opera
+    else if (event.which) {
+        keynum = event.which;
+    }
+    
+    if(keynum < 32 || keynum > 127) {
+    	// 8 = backspace, 10 = line feed, 13 = enter
+    	if(keynum != 8 && keynum != 10 && keynum != 13) {
+			event.stopImmediatePropagation();
+			return false;
+    	}
+    }
+}
+
